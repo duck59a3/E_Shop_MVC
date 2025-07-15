@@ -1,0 +1,53 @@
+﻿@model List<Do_an_II.Models.Product>
+
+@{
+    ViewData["Title"] = "Quản lý sản phẩm";
+    Layout = "~/Areas/Admin/Views/Shared/_LayoutAdmin.cshtml";
+}
+
+<h1>Danh sách sản phẩm</h1>
+<div class="container">
+    <div class="row pt-4 pb-2">
+        <div class="col-6 bg-green-gradient">
+            <a asp-area="Admin" asp-controller="Product" asp-action="Upsert" class="btn btn-primary">
+                Thêm sản phẩm
+            </a>
+        </div>
+    </div>
+    <table id="productTable" class="table table-bordered table-striped" style="width:100%">
+        <thead>
+            <tr>
+                <th>
+                    Tên sản phẩm
+                </th>
+                <th>
+                    Mô tả
+                </th>
+                <th>
+                    Giá
+                </th>
+                <th>
+                    Số lượng
+                </th>
+                <th>
+                    Kích cỡ
+                </th>
+                <th>
+                    Màu sắc
+                </th>
+                <th>
+                    Chất liệu
+                </th>
+                <th>
+                    Loại hàng
+                </th>
+                <th>
+                    Hành động
+                </th>
+            </tr>
+        </thead>
+    </table>
+</div>
+@section Scripts {
+    <script src="~/LayoutAdmin/assets/js/product.js"></script>
+}

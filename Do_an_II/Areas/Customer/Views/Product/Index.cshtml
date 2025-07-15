@@ -1,0 +1,211 @@
+﻿@model IEnumerable<Product>
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<!-- Breadcrumb Start -->
+<div class="breadcrumb-wrap">
+    <div class="container-fluid">
+        <ul class="breadcrumb">
+            <li class="breadcrumb-item"><a href="#">Home</a></li>
+            <li class="breadcrumb-item"><a href="#">Products</a></li>
+            <li class="breadcrumb-item active">Product List</li>
+        </ul>
+    </div>
+</div>
+<!-- Breadcrumb End -->
+<!-- Product List Start -->
+<<div class="product-view">
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Cột sản phẩm -->
+            <div class="col-lg-8">
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="product-view-top">
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="product-search">
+                                        <input type="email" value="Search">
+                                        <button><i class="fa fa-search"></i></button>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="product-short">
+                                        <div class="dropdown">
+                                            <div class="dropdown-toggle" data-toggle="dropdown">Product short by</div>
+                                            <div class="dropdown-menu dropdown-menu-right">
+                                                <a href="#" class="dropdown-item">Newest</a>
+                                                <a href="#" class="dropdown-item">Popular</a>
+                                                <a href="#" class="dropdown-item">Most sale</a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="product-price-range">
+                                        <div class="dropdown">
+                                            <div class="dropdown-toggle" data-toggle="dropdown">Product price range</div>
+                                            <div class="dropdown-menu dropdown-menu-right">
+                                                <a href="#" class="dropdown-item">$0 to $50</a>
+                                                <a href="#" class="dropdown-item">$51 to $100</a>
+                                                <a href="#" class="dropdown-item">$101 to $150</a>
+                                                <a href="#" class="dropdown-item">$151 to $200</a>
+                                                <a href="#" class="dropdown-item">$201 to $250</a>
+                                                <a href="#" class="dropdown-item">$251 to $300</a>
+                                                <a href="#" class="dropdown-item">$301 to $350</a>
+                                                <a href="#" class="dropdown-item">$351 to $400</a>
+                                                <a href="#" class="dropdown-item">$401 to $450</a>
+                                                <a href="#" class="dropdown-item">$451 to $500</a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    @foreach (var product in Model)
+                    {
+                        <div class="col-md-4">
+                            <div class="product-item">
+                                <div class="product-title">
+                                    <p>@product.Name</p>
+                                    <div class="ratting">
+                                        <i class="fa fa-star"></i>
+                                        <i class="fa fa-star"></i>
+                                        <i class="fa fa-star"></i>
+                                        <i class="fa fa-star"></i>
+                                        <i class="fa fa-star"></i>
+                                    </div>
+                                </div>
+
+                                @if (product.ProductImages != null && product.ProductImages.Count() > 0)
+                                {
+                                    <div class="product-image">
+                                        <a href="product-detail.html">
+                                            <img src="@product.ProductImages.FirstOrDefault().ImageUrl" style="width: 100%; height: 200px; object-fit: cover;" alt="Product Image">
+                                        </a>
+                                        <div class="product-action">
+                                            <a href="#"><i class="fa fa-cart-plus"></i></a>
+                                            <a href="#"><i class="fa fa-heart"></i></a>
+                                            <a href="#"><i class="fa fa-search"></i></a>
+                                        </div>
+                                    </div>
+                                }
+                                else
+                                {
+                                    <div class="product-image">
+                                        <a href="product-detail.html">
+                                            <img src="~/img/logo.png" alt="Product Image">
+                                        </a>
+                                        <div class="product-action">
+                                            <a href="#"><i class="fa fa-cart-plus"></i></a>
+                                            <a href="#"><i class="fa fa-heart"></i></a>
+                                            <a href="#"><i class="fa fa-search"></i></a>
+                                        </div>
+                                    </div>
+                                }
+
+                                <div class="product-price">
+                                    <h3><span>Gía tiền</span> @product.Price.ToString("c")</h3>
+                                </div>
+                                <div>
+                                    <a class="btn" href="#"><i class="fa fa-shopping-cart"></i>Buy Now</a>
+                                    <a asp-controller="Product" asp-action="Details" asp-route-productId="@product.Id" class="btn">Details</a>
+                                </div>
+                            </div>
+                        </div>
+                    }
+
+                    <!-- Phân trang -->
+                    <div class="col-md-12">
+                        <nav aria-label="Page navigation example">
+                            <ul class="pagination justify-content-center">
+                                <li class="page-item disabled">
+                                    <a class="page-link" href="#" tabindex="-1">Previous</a>
+                                </li>
+                                <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                                <li class="page-item"><a class="page-link" href="#">2</a></li>
+                                <li class="page-item"><a class="page-link" href="#">3</a></li>
+                                <li class="page-item">
+                                    <a class="page-link" href="#">Next</a>
+                                </li>
+                            </ul>
+                        </nav>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Cột Sidebar -->
+            <div class="col-lg-4 sidebar">
+                <div class="sidebar-widget category">
+                    <h2 class="title">Category</h2>
+                    <nav class="navbar bg-light">
+                        <ul class="navbar-nav">
+                            <li class="nav-item">
+                                <a class="nav-link" href="#"><i class="fa fa-female"></i>Quần áo nữ</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="#"><i class="fa fa-child"></i>Quần áo trẻ em</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="#"><i class="fa fa-tshirt"></i>Quần áo nam</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="#"><i class="fa fa-mobile-alt"></i>Hàng mới nhất</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="#"><i class="fa fa-microchip"></i>Bán chạy nhất</a>
+                            </li>
+                        </ul>
+                    </nav>
+                </div>
+                <div class="sidebar-widget brand">
+                    <div class="sidebar-widget brands">
+                        <h2 class="title">Our Brands</h2>
+                        <ul>
+                            <li><a href="#">Nulla </a><span></span></li>
+                            <li><a href="#">Curabitur </a><span></span></li>
+                            <li><a href="#">Nunc </a><span></span></li>
+                            <li><a href="#">Ullamcorper</a><span></span></li>
+                            <li><a href="#">Fusce </a><span></span></li>
+                            <li><a href="#">Sagittis</a><span></span></li>
+                        </ul>
+                    </div>
+                    <div class="sidebar-widget tag">
+                        <h2 class="title">Tags Cloud</h2>
+                        <a href="#">Lorem ipsum</a>
+                        <a href="#">Vivamus</a>
+                        <a href="#">Phasellus</a>
+                        <a href="#">pulvinar</a>
+                        <a href="#">Curabitur</a>
+                        <a href="#">Fusce</a>
+                        <a href="#">Sem quis</a>
+                        <a href="#">Mollis metus</a>
+                        <a href="#">Sit amet</a>
+                        <a href="#">Vel posuere</a>
+                        <a href="#">orci luctus</a>
+                        <a href="#">Nam lorem</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+    <!-- Product List End -->
+    <!-- Brand Start -->
+<div class="brand">
+    <div class="container-fluid">
+        <div class="brand-slider">
+            <div class="brand-item"><img src="~/img/brand-1.png" alt=""></div>
+            <div class="brand-item"><img src="~/img/brand-2.png" alt=""></div>
+            <div class="brand-item"><img src="~/img/brand-3.png" alt=""></div>
+            <div class="brand-item"><img src="~/img/brand-4.png" alt=""></div>
+            <div class="brand-item"><img src="~/img/brand-5.png" alt=""></div>
+            <div class="brand-item"><img src="~/img/brand-6.png" alt=""></div>
+        </div>
+    </div>
+</div>
+    <!-- Brand End -->

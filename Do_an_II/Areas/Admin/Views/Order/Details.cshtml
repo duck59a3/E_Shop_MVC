@@ -1,0 +1,247 @@
+﻿@model OrderVM
+@{
+    ViewData["Title"] = "Chi tiết đơn hàng";
+    Layout = "~/Areas/Admin/Views/Shared/_LayoutAdmin.cshtml";
+}
+
+<form method="post">
+    <input hidden asp-for="Order.Id" />
+    <br />
+    <div class="container bg-white p-4 rounded shadow-sm">
+        <!-- Back to Home -->
+        <div class="mb-3">
+            <a asp-action="Index" class="btn btn-outline-secondary">
+                <i class="mdi mdi-arrow-left"></i> Quay trở lại
+            </a>
+        </div>
+
+        <!-- Order Details -->
+        <h4 class="mb-3">Order Details</h4>
+        <div class="row">
+            <!-- Left Column -->
+            <div class="col-md-6">
+                <div class="mb-3">
+                    <label asp-for="Order.Name" class="form-label">Full Name</label>
+                    @if (User.IsInRole(Roles.Admin))
+                    {
+                        <input asp-for="Order.Name" type="text" class="form-control" />
+                        <span asp-validation-for="Order.Name" class="text-danger" />
+                    }
+                    else
+                    {
+                        <input asp-for="Order.Name" type="text" class="form-control" readonly />
+                    }
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="Order.AppUser.Email" class="form-label">Email</label>
+                    <input asp-for="Order.AppUser.Email" type="email" class="form-control" readonly />
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="Order.PhoneNumber" class="form-label">Phone Number</label>
+                    @if (User.IsInRole(Roles.Admin))
+                    {
+                        <input asp-for="Order.PhoneNumber" type="text" class="form-control" />
+                        <span asp-validation-for="Order.PhoneNumber" class="text-danger" />
+                    }
+                    else
+                    {
+                        <input asp-for="Order.PhoneNumber" type="text" class="form-control" readonly />
+                    }
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="Order.Address" class="form-label">Address</label>
+                    @if (User.IsInRole(Roles.Admin))
+                    {
+                        <input asp-for="Order.Address" type="text" class="form-control" />
+                        <span asp-validation-for="Order.Address" class="text-danger" />
+                    }
+                    else
+                    {
+                        <input asp-for="Order.Address" type="text" class="form-control" readonly />
+                    }
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="Order.City" class="form-label">City</label>
+                    @if (User.IsInRole(Roles.Admin))
+                    {
+                        <input asp-for="Order.City" type="text" class="form-control" />
+                        <span asp-validation-for="Order.City" class="text-danger" />
+                    }
+                    else
+                    {
+                        <input asp-for="Order.City" type="text" class="form-control" readonly />
+                    }
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="Order.State" class="form-label">State</label>
+                    @if (User.IsInRole(Roles.Admin))
+                    {
+                        <input asp-for="Order.State" type="text" class="form-control" />
+                        <span asp-validation-for="Order.State" class="text-danger" />
+                    }
+                    else
+                    {
+                        <input asp-for="Order.State" type="text" class="form-control" readonly />
+                    }
+                </div>
+                <div class="mb-3">
+                    <label asp-for="Order.PostalCode" class="form-label">ZIP Code</label>
+                    @if (User.IsInRole(Roles.Admin))
+                    {
+                        <input asp-for="Order.PostalCode" type="text" class="form-control" />
+                        <span asp-validation-for="Order.PostalCode" class="text-danger" />
+                    }
+                    else
+                    {
+                        <input asp-for="Order.State" type="text" class="form-control" readonly />
+                    }
+                </div>
+
+
+                <!-- Right Column -->
+
+                <div class="mb-3">
+
+                    <label asp-for="Order.OrderDate" class="form-label">Order Date</label>
+                    <input value="@Model.Order.OrderDate.ToShortDateString()" readonly type="text" class="form-control" />
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="Order.Carrier" class="form-label">Carrier</label>
+                    @if (User.IsInRole(Roles.Admin))
+                    {
+                        <input asp-for="Order.Carrier" id="carrier" type="text" class="form-control" />
+                    }
+                    else
+                    {
+                        <input asp-for="Order.Carrier" type="text" class="form-control" readonly />
+                    }
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="Order.TrackingNumber" class="form-label">Tracking Number</label>
+                    @if (User.IsInRole(Roles.Admin))
+                    {
+                        <input asp-for="Order.TrackingNumber"id="trackingNumber" type="text" class="form-control" />
+                    }
+                    else
+                    {
+                        <input asp-for="Order.TrackingNumber" type="text" class="form-control" readonly />
+                    }
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Shipping Date</label>
+                <input value="@Model.Order.ShippingDate.ToShortDateString()" type="text" class="form-control" readonly />
+            </div>
+
+            @if (User.IsInRole(Roles.Admin))
+            {
+                <div class="mb-3">
+                    <label asp-for="Order.SessionId" class="form-label">Session Id</label>
+                    <input asp-for="Order.SessionId" type="text" class="form-control" readonly />
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="Order.PaymentIntentId" class="form-label">Payment Intent Id</label>
+                    <input asp-for="Order.PaymentIntentId" type="text" class="form-control" readonly />
+                </div>
+            }
+
+            <div class="mb-3">
+                <label class="form-label">
+                    @(Model.Order.SessionId == null ? "Payment Due Date" : "Payment Date")
+                </label>
+                <input value="@(Model.Order.SessionId == null ? Model.Order.PaymentDueDate.ToShortDateString() : Model.Order.PaymentDate.ToShortDateString())"
+                type="text" class="form-control" readonly />
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="Order.PaymentStatus" class="form-label">Payment Status</label>
+                <input asp-for="Order.PaymentStatus" type="text" class="form-control" readonly />
+            </div>
+            <div class="mb-3">
+                @if (User.IsInRole(Roles.Admin))
+                {
+                    <button type="submit" asp-action="UpdateOrderDetail" class="btn btn-warning form-control myy-1">Cập nhật đơn hàng</button>
+
+
+                }
+            </div>
+        </div>
+    </div>
+
+    <!-- Extra Info -->
+    <div class="row mt-3">
+        <div class="col-md-6">
+            <p><strong>Status:</strong> @Model.Order.OrderStatus</p>
+            <p><strong>Payment Status:</strong> @Model.Order.PaymentStatus</p>
+        </div>
+
+        <!-- Total Price -->
+        <div class="mb-4 mt-3">
+            <h5>Total: <span class="text-success">@Model.Order.OrderTotal.ToString("C")</span></h5>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="d-flex flex-wrap gap-2">
+            <button disabled class="btn btn-success">
+                <i class="mdi mdi-credit-card"></i> Pay Now
+            </button>
+            @if (User.IsInRole(Roles.Admin))
+            {
+                @if (Model.Order.OrderStatus == Status.StatusApproved || Model.Order.PaymentMethod == PaymentMethod.Cod)
+                {
+                    <button class="btn btn-primary" asp-action="StartProcessing">
+                        <i class="mdi mdi-play-circle"></i> Start Processing
+                    </button>
+                }
+                @if (Model.Order.OrderStatus == Status.StatusInProcess)
+                {
+
+                    <button class="btn btn-info text-white" asp-action="ShipOrder" onclick="return validateInput()">
+                        <i class="mdi mdi-truck-fast"></i> Ship Order
+                    </button>
+                }
+                @if (Model.Order.OrderStatus != Status.StatusShipped && Model.Order.OrderStatus != Status.StatusRefunded
+                              && Model.Order.OrderStatus != Status.StatusCancelled)
+                {
+
+                    <button class="btn btn-danger" asp-action="CancelOrder">
+                        <i class="mdi mdi-cancel"></i> Cancel Order
+            </button>
+                }
+            }
+        </div>
+    </div>
+</form>
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        function validateInput() {
+            if (document.getElementById("trackingNumber").value==""){
+                $wal.fire({
+                    icon: 'error',
+                    title: 'Oops...',
+                    text: 'Vui lòng nhập mã vận đơn!',
+                });
+                return false;
+            }
+             if (document.getElementById("carrier").value==""){
+                $wal.fire({
+                    icon: 'error',
+                    title: 'Oops...',
+                    text: 'Vui lòng nhập mã vận chuyển!',
+                });
+                return false;
+            }
+            return true;
+        }
+    </script>
+}

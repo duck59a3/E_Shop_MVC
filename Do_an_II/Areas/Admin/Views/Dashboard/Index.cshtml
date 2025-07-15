@@ -1,0 +1,41 @@
+﻿@model DashboardVM
+
+@{
+    Layout = "~/Areas/Admin/Views/Shared/_LayoutAdmin.cshtml";
+}
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<canvas id="productChart" width="400" height="200"></canvas>
+
+<script>
+    var ctx = document.getElementById('productChart').getContext('2d');
+    var productChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: ['Sản phẩm hiện có', 'Sản phẩm đã bán'],
+            datasets: [{
+                label: 'Thống kê sản phẩm',
+                data: [@Model.TotalProducts, @Model.TotalSoldProducts],
+                backgroundColor: [
+                    'rgba(75, 192, 192, 0.6)',
+                    'rgba(255, 99, 132, 0.6)'
+                ],
+                borderColor: [
+                    'rgba(75, 192, 192, 1)',
+                    'rgba(255, 99, 132, 1)'
+                ],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        stepSize: 1
+                    }
+                }
+            }
+        }
+    });
+</script>

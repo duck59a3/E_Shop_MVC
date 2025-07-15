@@ -1,0 +1,100 @@
+﻿@page
+@using Do_an_II.Utilities
+@model RegisterModel
+@{
+    ViewData["Title"] = "Đăng ký";
+}
+
+<div class="container d-flex justify-content-center align-items-center" style="min-height: 100vh;">
+    <div class="card shadow p-4" style="width: 100%; max-width: 500px; border-radius: 15px;">
+        @if (User.IsInRole(Roles.Admin))
+        {
+            <h3 class="text-center mb-4">Đăng ký tài khoản cho Admin</h3>
+        }
+        else
+        {
+            <h3 class="text-center mb-4">@ViewData["Title"]</h3>
+        }
+
+        <form id="registerForm" asp-route-returnUrl="@Model.ReturnUrl" method="post">
+            <div asp-validation-summary="ModelOnly" class="text-danger mb-3" role="alert"></div>
+
+            <div class="form-floating mb-3">
+                <label asp-for="Input.Email">Email</label>
+                <input asp-for="Input.Email" class="form-control" autocomplete="username" aria-required="true" placeholder="name@example.com" />
+                <span asp-validation-for="Input.Email" class="text-danger"></span>
+            </div>
+            <div class="form-floating mb-3">
+                <label asp-for="Input.Name">Tên tài khoản</label>
+                <input asp-for="Input.Name" class="form-control" autocomplete="username" aria-required="true" placeholder="Tên tài khoản" />
+                <span asp-validation-for="Input.Name" class="text-danger"></span>
+            </div>
+            <div class="form-floating mb-3">
+                <label asp-for="Input.Password">Mật khẩu</label>
+                <input asp-for="Input.Password" class="form-control" autocomplete="new-password" aria-required="true" placeholder="Mật khẩu" />
+                <span asp-validation-for="Input.Password" class="text-danger"></span>
+            </div>
+
+            <div class="form-floating mb-3">
+                <label asp-for="Input.ConfirmPassword">Xác nhận mật khẩu</label>
+                <input asp-for="Input.ConfirmPassword" class="form-control" autocomplete="new-password" aria-required="true" placeholder="Xác nhận mật khẩu" />
+                <span asp-validation-for="Input.ConfirmPassword" class="text-danger"></span>
+            </div>
+            <div class="form-floating mb-3">
+                <label asp-for="Input.Address">Địa chỉ</label>
+                <input asp-for="Input.Address" class="form-control" autocomplete="username" aria-required="true" placeholder="Tên địa chỉ" />
+                <span asp-validation-for="Input.Address" class="text-danger"></span>
+            </div>
+            <div class="form-floating mb-3">
+                <label asp-for="Input.City">Thành phố</label>
+                <input asp-for="Input.City" class="form-control" autocomplete="username" aria-required="true" placeholder="Tên thành phố" />
+                <span asp-validation-for="Input.City" class="text-danger"></span>
+            </div>
+            <div class="form-floating mb-3">
+                <label asp-for="Input.PhoneNumber">Số điện thoại</label>
+                <input asp-for="Input.PhoneNumber" class="form-control" autocomplete="username" aria-required="true" placeholder="name@example.com" />
+                <span asp-validation-for="Input.PhoneNumber" class="text-danger"></span>
+            </div>
+            @if (User.IsInRole(Roles.Admin))
+            {
+                <div class="form-floating mb-3">
+                    <label asp-for="Input.Role">Vai trò</label>
+                    <select asp-for="Input.Role" asp-items="@Model.Input.RoleList" class="form-select">
+                        <option disabled selected>--Chọn vai trò--</option>
+                    </select>
+
+
+                </div>
+            }
+
+            <button id="registerSubmit" type="submit" class="w-100 btn btn-lg btn-primary">Đăng ký</button>
+        </form>
+
+        <hr class="my-4" />
+
+        @if(!User.IsInRole(Roles.Admin)) {
+        <div class="text-center mb-2 text-center">Hoặc đăng nhập bằng:</div>
+        @if ((Model.ExternalLogins?.Count ?? 0) == 0)
+        {
+            <div class="text-center text-muted">
+                Chưa cấu hình dịch vụ đăng nhập ngoài
+            </div>
+        }
+        else
+        {
+            <form id="external-account" asp-page="./ExternalLogin" asp-route-returnUrl="@Model.ReturnUrl" method="post" class="text-center">
+                @foreach (var provider in Model.ExternalLogins!)
+                {
+                    <button type="submit" class="btn btn-outline-primary me-2 mb-2" name="provider" value="@provider.Name" title="Đăng nhập bằng @provider.DisplayName">
+                        @provider.DisplayName
+                    </button>
+                }
+            </form>
+        }
+        }
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

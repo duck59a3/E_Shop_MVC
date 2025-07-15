@@ -1,0 +1,185 @@
+﻿@model CartVM
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<!-- Breadcrumb Start -->
+<div class="breadcrumb-wrap">
+    <div class="container-fluid">
+        <ul class="breadcrumb">
+            <li class="breadcrumb-item"><a href="#">Home</a></li>
+            <li class="breadcrumb-item"><a href="#">Products</a></li>
+            <li class="breadcrumb-item active">Checkout</li>
+        </ul>
+    </div>
+</div>
+<!-- Breadcrumb End -->
+<form asp-action="Checkout" method="post">
+    <!-- Checkout Start -->
+    <div class="checkout">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-lg-8">
+                    <div class="checkout-inner">
+                        <div class="billing-address">
+                            <h2>Billing Address</h2>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <label>Name</label>
+                                    <input asp-for="Order.Name" class="form-control" type="text" placeholder="Name">
+                                    @* <span asp-validation-for="Order.Name" class="form-control"></span> *@
+                                </div>
+                                <div class="col-md-6">
+                                    <label>Mobile No</label>
+                                    <input asp-for="Order.PhoneNumber" class="form-control" type="text" placeholder="Name">
+                                    @* <span asp-validation-for="Order.PhoneNumber" class="form-control"></span> *@
+                                </div>
+                                <div class="col-md-12">
+                                    <label>Address</label>
+                                    <input asp-for="Order.Address" class="form-control" type="text" placeholder="Name">
+                                    @* <span asp-validation-for="Order.Address" class="form-control"></span> *@
+                                </div>
+                                <div class="col-md-6">
+                                    <label>City</label>
+                                    <input asp-for="Order.City" class="form-control" type="text" placeholder="Name">
+                                    @* <span asp-validation-for="Order.City" class="form-control"></span> *@
+                                </div>
+                                <div class="col-md-6">
+                                    <label>State</label>
+                                    <input asp-for="Order.State" class="form-control" type="text" placeholder="Name">
+                                    @* <span asp-validation-for="Order.State" class="form-control"></span> *@
+                                </div>
+                                <div class="col-md-6">
+                                    <label>ZIP Code</label>
+                                    <input asp-for="Order.PostalCode" class="form-control" type="text" placeholder="Name">
+                                    @* <span asp-validation-for="Order.PostalCode" class="form-control"></span> *@
+                                </div>
+
+                            </div>
+                        </div>
+
+
+                    </div>
+                </div>
+                <div class="col-lg-4">
+                    <div class="checkout-inner">
+                        <div class="checkout-summary">
+                            <h1>Số tiền cần thanh toán</h1>
+                            <ul class="list-group mb-3">
+                                @foreach (var details in Model.CartList)
+                                {
+                                    <li class="list-group-item d-flex justify-content-between">
+                                        <div>
+                                            <h6 class="my-0">@details.Product.Name</h6>
+                                            <small class="text-muted">Số lượng: @details.Count</small>
+                                        </div>
+                                        <span class="text-muted">@((details.Price * details.Count).ToString("c"))</span>
+                                    </li>
+                                }
+                            </ul>
+                            <p class="sub-total">Tạm tính<span>@Model.Order.OrderTotal.ToString("c")</span></p>
+                            <p class="ship-cost">Phí áp dụng<span>$1</span></p>
+                            <h2>Tổng tiền<span>@(Model.Order.OrderTotal.ToString("c") + 30)</span></h2>
+                        </div>
+
+                        <div class="checkout-payment">
+                            <div class="payment-methods">
+                                <h1>Phương thức thanh toán</h1>
+                                <input type="radio" name="PaymentMethod" value="stripe" checked> Thanh toán qua Stripe<br />
+                                <input type="radio" name="PaymentMethod" value="vnpay"> Thanh toán qua VNPAY<br />
+                                <input type="radio" name="PaymentMethod" value="cod"> Thanh toán khi nhận hàng <br />
+                            </div>
+
+                            <div class="card-footer">
+                                <div class="row">
+                                    <div class="col-12 col-md-8 pt-2">
+                                        <p style="color:crimson font-size:30px">
+                                            Ngày giao hàng dự kiến:
+                                            @DateTime.Now.AddDays(7).ToShortDateString() - @DateTime.Now.AddDays(14).ToShortDateString()
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="checkout-btn">
+                                <button type="submit" class="btn btn-primary form-control">Đặt hàng</button>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+<!-- Checkout End -->
+<!-- Footer Start -->
+<div class="footer">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-lg-3 col-md-6">
+                <div class="footer-widget">
+                    <h2>Get in Touch</h2>
+                    <div class="contact-info">
+                        <p><i class="fa fa-map-marker"></i>123 E Store, Los Angeles, USA</p>
+                        <p><i class="fa fa-envelope"></i>email@example.com</p>
+                        <p><i class="fa fa-phone"></i>+123-456-7890</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-3 col-md-6">
+                <div class="footer-widget">
+                    <h2>Follow Us</h2>
+                    <div class="contact-info">
+                        <div class="social">
+                            <a href=""><i class="fab fa-twitter"></i></a>
+                            <a href=""><i class="fab fa-facebook-f"></i></a>
+                            <a href=""><i class="fab fa-linkedin-in"></i></a>
+                            <a href=""><i class="fab fa-instagram"></i></a>
+                            <a href=""><i class="fab fa-youtube"></i></a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-3 col-md-6">
+                <div class="footer-widget">
+                    <h2>Company Info</h2>
+                    <ul>
+                        <li><a href="#">About Us</a></li>
+                        <li><a href="#">Privacy Policy</a></li>
+                        <li><a href="#">Terms & Condition</a></li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="col-lg-3 col-md-6">
+                <div class="footer-widget">
+                    <h2>Purchase Info</h2>
+                    <ul>
+                        <li><a href="#">Pyament Policy</a></li>
+                        <li><a href="#">Shipping Policy</a></li>
+                        <li><a href="#">Return Policy</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="row payment align-items-center">
+            <div class="col-md-6">
+                <div class="payment-method">
+                    <h2>We Accept:</h2>
+                    <img src="~/img//payment-method.png" alt="Payment Method" />
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="payment-security">
+                    <h2>Secured By:</h2>
+                    <img src="~/img//godaddy.svg" alt="Payment Security" />
+                    <img src="~/img//norton.svg" alt="Payment Security" />
+                    <img src="~/img//ssl.svg" alt="Payment Security" />
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

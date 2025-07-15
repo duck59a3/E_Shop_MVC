@@ -1,0 +1,114 @@
+﻿@model Cart
+
+<form method="post">
+    <input asp-for="ProductId" hidden />
+    <div class="card shadow-lg border-0 mt-4">
+        <div class="card-header bg-dark text-white py-4 text-center">
+            <h2 class="text-uppercase mb-1">@Model.Product.Name</h2>
+            <p class="text-white-50 mb-0">Mã sản phẩm: @Model.Product.Id</p>
+        </div>
+
+        <div class="card-body px-5 pb-5">
+            <div class="row g-4">
+                <!-- Cột ảnh -->
+                <div class="col-lg-6 d-flex justify-content-center">
+                    @if (Model.Product.ProductImages != null && Model.Product.ProductImages.Count() > 0)
+                    {
+                        <div id="carouselExampleIndicators" class="carousel slide" data-bs-ride="carousel">
+                            <div class="carousel-indicators">
+                                @foreach (var itemIndex in Model.Product.ProductImages
+                                .Select((img, i) => new { ProductImage = img, Index = i }))
+                                {
+                                    <button type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide-to="@itemIndex.Index" class="@(itemIndex.Index == 0 ? "active" : "")" aria-current="true" aria-label="Slide @itemIndex.Index"></button>
+                                })
+                                
+                            </div>
+                            <div class="carousel-inner">
+                                @foreach (var itemIndex in Model.Product.ProductImages
+                               .Select((img, i) => new { Image = img, Index = i })) {
+                                <div class="@(itemIndex.Index == 0 ?"carousel-item active":"carousel-item")">
+                                    <img src="@itemIndex.Image.ImageUrl" class="d-block w-100" alt="...">
+                                </div>
+                                }
+                            </div>
+                            <button class="carousel-control-prev" type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide="prev">
+                                <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                                <span class="visually-hidden">Previous</span>
+                            </button>
+                            <button class="carousel-control-next" type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide="next">
+                                <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                                <span class="visually-hidden">Next</span>
+                            </button>
+                        </div>
+                    }
+                    else
+                    {
+                        <img src="~/img/logo.png" alt="@Model.Product.Name"
+                             class="img-fluid rounded shadow-sm border border-2" style="max-height: 500px;" />
+                    })
+                    
+                </div>
+
+                <!-- Cột thông tin -->
+                <div class="col-lg-6">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Màu sắc:</label>
+                        <div>
+  
+                            <span class="d-inline-block rounded-circle border"
+                                  style="width: 24px; height: 24px; background-color: @Model.Product.Color;">
+                            </span>
+                            <span class="ms-2 align-middle">@Model.Product.Color</span>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Kích cỡ:</label>
+                        <div>
+                            <span class="badge bg-primary fs-6 px-3 py-2">@Model.Product.Size</span>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Chất liệu:</label>
+                        <div>
+                            <span class="badge bg-success fs-6 px-3 py-2">@Model.Product.Material</span>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Mô tả:</label>
+                        <div class="p-3 border rounded bg-light">@Model.Product.Description</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="Count"class="form-label fw-bold">Số lượng:</label>
+                        <input asp-for="Count" type="number"  value="1" min="1" class="form-control w-50" />
+                    </div>
+
+                    
+                </div>
+                <div class="d-flex justify-content-between mt-4">
+                    <a asp-controller="Product" asp-action="Index" class="btn btn-outline-secondary" style="margin-right: 50px;">
+                        <i class="bi bi-arrow-left"></i> Quay trở lại
+                    </a>
+
+                    <button type="submit" class="btn btn-danger">
+                        <i class="bi bi-cart3"></i> Thêm vào giỏ
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="row product-detail-bottom">
+            <div class="col-lg-12">
+                <ul class="nav nav-pills nav-justified">
+                    <li class="nav-item">
+                        <a class="nav-link" data-toggle="pill" href="#reviews">Bình luận sản phẩm </a>
+                    </li>
+                </ul>
+                
+
+                
+              
+            </div>
+        </div>
+    </div>
+</form>

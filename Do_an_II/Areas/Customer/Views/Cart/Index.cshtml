@@ -1,0 +1,104 @@
+﻿@model CartVM
+
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<!-- Breadcrumb Start -->
+<div class="breadcrumb-wrap">
+    <div class="container-fluid">
+        <ul class="breadcrumb">
+            <li class="breadcrumb-item"><a href="#">Home</a></li>
+            <li class="breadcrumb-item"><a href="#">Products</a></li>
+            <li class="breadcrumb-item active">Cart</li>
+        </ul>
+    </div>
+</div>
+<!-- Breadcrumb End -->
+<!-- Cart Start -->
+<div class="cart-page">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="cart-page-inner">
+                    <div class="table-responsive">
+                        <table class="table table-bordered">
+                            <thead class="thead-dark">
+                                <tr>
+                                    <th>Product</th>
+                                    <th>Price</th>
+                                    <th>Quantity</th>
+                                    <th>Remove</th>
+                                </tr>
+                            </thead>
+                            <tbody class="align-middle">
+                                @foreach (var item in Model.CartList) {
+                                    <tr>
+                                        <td>
+                                            <div class="img">
+                                                @if (item.Product.ProductImages != null && item.Product.ProductImages.Count() > 0)
+                                                {
+                                                    <img src="@item.Product.ProductImages.FirstOrDefault().ImageUrl" alt="Image">
+                                                }
+                                                else
+                                                {
+                                                    <img src="~/img/logo.png" alt="Image">
+                                                }
+                                                <p>@item.Product.Name</p>
+                                            </div>
+                                        </td>
+                                        <td>@item.Product.Price.ToString("c")</td>
+                                        <td>
+                                            <div class="qty">
+                                                <a asp-action="Minus" asp-route-cartId="@item.Id" class="btn btn-minus"><i class="fa fa-minus"></i></a>
+
+                                                <span style="display:inline-block; min-width: 20px; text-align: center; background: lightgray;">@item.Count</span>
+                                                <a asp-action="Plus" asp-route-cartId="@item.Id" class="btn btn-plus"><i class="fa fa-plus"></i></a>
+                                            </div>
+                                        </td>
+
+                                        <td> <a asp-action="Remove" asp-route-cartId="@item.Id" class="btn btn-danger"><i class="fa fa-trash"></i></a></td>
+                                            
+                                    </tr>
+                                }
+                                
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4">
+                <div class="cart-page-inner">
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="coupon">
+                                <input type="text" placeholder="Coupon Code">
+                                <button>Áp dụng mã</button>
+                            </div>
+                        </div>
+                        <div class="col-md-12">
+                            <div class="cart-summary">
+                                <div class="cart-content">
+                                    <h1>Tóm tắt giỏ</h1>
+                                    <p>Thành tiền<span>@Model.Order.OrderTotal.ToString("c")</span></p>
+                                    <p>Phí giao hàng<span>$1</span></p>
+                                    <h2>Tổng tiền<span>@(Model.Order.OrderTotal.ToString("c")+30) </span></h2>
+                                </div>
+                                
+                                <div class="cart-btn">
+                                    <a asp-area="Customer" asp-controller="Product" asp-action="Index" class="btn btn-outline-primary me-2" style="margin-right: 80px;">Cập nhật giỏ</a>
+                                    @if(User.Identity?.IsAuthenticated ?? false) {
+                                        <a asp-action="Checkout" class="btn btn-secondary">
+                                            <i class="bi bi-credit-card-fill"></i> Thanh toán
+                                        </a>
+                                    } 
+                                    
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Cart End -->

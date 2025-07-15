@@ -1,0 +1,15 @@
+﻿@page
+@model LockoutModel
+@{
+    ViewData["Title"] = "Locked out";
+}
+
+<header class="text-center my-4 p-4 border rounded bg-light">
+    <h1 class="text-danger fw-bold">
+        <i class="bi bi-lock-fill me-2"></i> <!-- icon khóa Bootstrap Icons -->
+        @ViewData["Title"]
+    </h1>
+    <p class="text-danger fs-5">
+        Tài khoản này đã bị <span class="fw-semibold">khóa</span>.
+    </p>
+</header>

@@ -1,0 +1,37 @@
+﻿@{
+    ViewData["Title"] = "Quản lý nhân viên";
+    Layout = "~/Areas/Admin/Views/Shared/_LayoutAdmin.cshtml";
+}
+<h1>Danh sách nhân viên</h1>
+<div class="container">
+
+    <table id="tableemployee" class="table table-bordered table-striped" style="width:100%">
+        <thead>
+            <tr>
+                <th>
+                    Tên người dùng
+                </th>
+                <th>
+                    Số điện thoại
+                </th>
+                <th>
+                    Địa chỉ
+                </th>
+                <th>
+                    Email
+                </th>
+                <th>
+                    Thành phố
+                </th>
+
+            </tr>
+        </thead>
+        <tbody>
+        </tbody>
+    </table>
+</div>
+
+@section Scripts {
+    <script src="~/LayoutAdmin/assets/js/employee.js"></script>
+}
+

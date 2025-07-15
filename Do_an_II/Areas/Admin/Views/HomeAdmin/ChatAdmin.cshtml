@@ -1,0 +1,132 @@
+﻿@{
+    Layout = "~/Areas/Admin/Views/Shared/_LayoutAdmin.cshtml";
+    ViewData["Title"] = "Admin Chat";
+}
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+<div class="container-fluid h-100">
+    <div class="row h-100">
+        <!-- Sidebar khách hàng -->
+        <div class="col-3 border-end bg-light overflow-auto p-0" id="customerList" style="height: 100vh;">
+            <!-- Danh sách khách sẽ render tại đây -->
+        </div>
+
+        <!-- Khung chat -->
+        <div class="col-9 d-flex flex-column p-0" style="height: 100vh;">
+            <div class="p-3 bg-primary text-white">
+                <h4 class="m-0" id="chatTitle">Chat với khách hàng</h4>
+            </div>
+
+            <!-- Danh sách tin nhắn -->
+            <div class="flex-grow-1 overflow-auto p-3" id="messagesList" style="background-color: #f8f9fa;">
+                <!-- Tin nhắn sẽ render tại đây -->
+            </div>
+
+            <!-- Input nhắn tin -->
+            <div class="border-top d-flex p-3">
+                <input type="text" id="messageInput" class="form-control me-2" placeholder="Type your message" />
+                <button class="btn btn-primary" id="sendButton">Send</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.5/signalr.min.js"></script>
+<script>
+    let selectedCustomer = '';
+    let customerList = [];
+    let messagesByCustomer = {};
+
+    const connection = new signalR.HubConnectionBuilder().withUrl("/chathub?isAdmin=true").build();
+
+    // Nhận tin nhắn từ customer
+    connection.on("ReceiveMessageFromCustomer", function (customerId, message) {
+        // Nếu customer chưa có trong sidebar, thêm vào
+        if (!customerList.includes(customerId)) {
+            customerList.push(customerId);
+
+            let customerItem = document.createElement('div');
+            customerItem.className = 'list-group-item list-group-item-action d-flex align-items-center p-3 border-bottom';
+            customerItem.setAttribute('data-customerid', customerId);
+            customerItem.style.cursor = 'pointer';
+            customerItem.innerHTML = `<img src="https://via.placeholder.com/40" class="rounded-circle me-2"> <span>${customerId}</span>`;
+
+            customerItem.addEventListener('click', function () {
+                selectedCustomer = customerId;
+                document.querySelectorAll('#customerList div').forEach(e => e.classList.remove('active'));
+                customerItem.classList.add('active');
+
+                document.getElementById('chatTitle').innerText = `Chat with ${customerId}`;
+
+                // Render lại lịch sử chat của customer đó
+                renderMessages(customerId);
+            });
+
+            document.getElementById('customerList').appendChild(customerItem);
+        }
+
+        // Lưu tin nhắn vào memory
+        if (!messagesByCustomer[customerId]) {
+            messagesByCustomer[customerId] = [];
+        }
+        messagesByCustomer[customerId].push({ sender: 'customer', text: message });
+
+        // Nếu đang xem đúng customer → render luôn tin nhắn mới
+        if (selectedCustomer === customerId) {
+            appendMessage('customer', customerId, message);
+        }
+    });
+
+    connection.start().catch(function (err) {
+        return console.error(err.toString());
+    });
+
+    document.getElementById('sendButton').addEventListener('click', function (event) {
+        const message = document.getElementById('messageInput').value;
+
+        if (selectedCustomer === '') {
+            alert('Please select a customer to chat with.');
+            return;
+        }
+
+        connection.invoke("SendMessageToCustomer", selectedCustomer, message).catch(function (err) {
+            return console.error(err.toString());
+        });
+
+        // Lưu tin nhắn vào memory
+        if (!messagesByCustomer[selectedCustomer]) {
+            messagesByCustomer[selectedCustomer] = [];
+        }
+        messagesByCustomer[selectedCustomer].push({ sender: 'admin', text: message });
+
+        appendMessage('admin', 'Admin', message);
+
+        document.getElementById('messageInput').value = '';
+        event.preventDefault();
+    });
+
+    function appendMessage(sender, user, message) {
+        const msg = document.createElement('div');
+        msg.className = 'mb-2 p-2 rounded w-50 ' + (sender === 'admin' ? 'bg-primary text-white ms-auto' : 'bg-white');
+        msg.innerHTML = `<strong>${user}</strong><br>${message}`;
+        msg.style.textAlign = sender === 'admin' ? 'right' : 'left';
+        msg.style.clear = 'both';
+        msg.style.float = sender === 'admin' ? 'right' : 'left';
+
+        document.getElementById('messagesList').appendChild(msg);
+
+        // Cuộn xuống tin nhắn mới
+        document.getElementById('messagesList').scrollTop = document.getElementById('messagesList').scrollHeight;
+    }
+
+    function renderMessages(customerId) {
+        document.getElementById('messagesList').innerHTML = '';
+
+        messagesByCustomer[customerId].forEach(msg => {
+            appendMessage(msg.sender, msg.sender === 'admin' ? 'Admin' : customerId, msg.text);
+        });
+
+        document.getElementById('messagesList').scrollTop = document.getElementById('messagesList').scrollHeight;
+    }
+</script>

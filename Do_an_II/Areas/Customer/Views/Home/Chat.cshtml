@@ -1,0 +1,82 @@
+﻿@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = "Customer Chat";
+    string userId = User.Identity.Name;
+}
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+<div class="container-fluid h-100">
+    <div class="row h-100">
+        <!-- Sidebar đơn giản -->
+        <div class="col-3 border-end bg-light p-0" style="height: 100vh;">
+            <div class="p-3 bg-primary text-white">
+                <h4 class="m-0">Eshop Chat</h4>
+            </div>
+        </div>
+
+        <!-- Khung chat -->
+        <div class="col-9 d-flex flex-column p-0" style="height: 100vh;">
+            <!-- Khung tin nhắn -->
+            <div class="flex-grow-1 overflow-auto p-3" id="messagesList" style="background-color: #f8f9fa;">
+                <!-- Tin nhắn sẽ render tại đây -->
+            </div>
+
+            <!-- Input nhắn tin -->
+            <div class="border-top d-flex p-3">
+                <input type="text" id="messageInput" class="form-control me-2" placeholder="Type your message" />
+                <button class="btn btn-primary" id="sendButton">Send</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.5/signalr.min.js"></script>
+<script>
+    const connection = new signalR.HubConnectionBuilder().withUrl("/chathub").build();
+
+    // Nhận tin nhắn từ admin
+    connection.on("ReceiveMessageFromAdmin", function (user, message) {
+        const msg = document.createElement('div');
+        msg.className = 'mb-2 p-2 bg-light rounded w-50';
+        msg.innerHTML = `<strong>${user}</strong><br>${message}`;
+        msg.style.textAlign = 'left';
+        msg.style.clear = 'both';
+        msg.style.float = 'left';
+
+        document.getElementById('messagesList').appendChild(msg);
+
+        // Cuộn xuống tin nhắn mới
+        document.getElementById('messagesList').scrollTop = document.getElementById('messagesList').scrollHeight;
+    });
+
+    connection.start().catch(function (err) {
+        return console.error(err.toString());
+    });
+
+    // Gửi tin nhắn tới admin
+    document.getElementById('sendButton').addEventListener('click', function (event) {
+        const message = document.getElementById('messageInput').value;
+
+        connection.invoke("SendMessageToAdmin", message).catch(function (err) {
+            return console.error(err.toString());
+        });
+
+        // Hiển thị tin nhắn customer (căn phải)
+        const msg = document.createElement('div');
+        msg.className = 'mb-2 p-2 bg-primary text-white rounded w-50 ms-auto';
+        msg.innerHTML = `<strong>You</strong><br>${message}`;
+        msg.style.textAlign = 'right';
+        msg.style.clear = 'both';
+        msg.style.float = 'right';
+
+        document.getElementById('messagesList').appendChild(msg);
+
+        document.getElementById('messageInput').value = '';
+
+        // Cuộn xuống tin nhắn mới
+        document.getElementById('messagesList').scrollTop = document.getElementById('messagesList').scrollHeight;
+
+        event.preventDefault();
+    });
+</script>
