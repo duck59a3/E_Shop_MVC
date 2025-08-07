@@ -8,6 +8,9 @@ using Microsoft.AspNetCore.Identity.UI.Services;
 using Stripe;
 using Do_an_II.DbInitializer;
 using Do_an_II.Services.VnPay;
+using Do_an_II.Hubs;
+using Do_an_II.Services.ChatServices;
+using Do_an_II.Services.EmailServices;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -50,6 +53,9 @@ builder.Services.AddScoped<IVnPayService, VnPayService>();
 builder.Services.AddRazorPages();
 builder.Services.AddScoped<IUnitOfWork,UnitOfWork>();
 builder.Services.AddScoped<IEmailSender,EmailSender>();
+builder.Services.AddScoped<IChatService,ChatService>();
+builder.Services.AddScoped<IEmailService, EmailService>();
+builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
 builder.Services.AddSignalR();
 var app = builder.Build();
 
@@ -68,7 +74,8 @@ app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
 app.UseSession();
-app.MapHub<NotificationHub>("/notificationHub");
+app.MapHub<ChatHub>("/ChatHub");
+
 SeedDatabase();
 app.MapRazorPages();
 app.MapControllerRoute(

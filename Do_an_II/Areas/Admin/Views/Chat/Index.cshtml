@@ -1,0 +1,316 @@
+﻿@model AdminChatVM
+@{
+    ViewData["Title"] = "Nhắn tin";
+    Layout = "~/Areas/Admin/Views/Shared/_LayoutAdmin.cshtml";
+}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="card-title mb-0">
+                        <i class="fas fa-comments me-2"></i>
+                        Quản lý Chat Hỗ trợ Khách hàng
+                    </h4>
+                </div>
+                <div class="card-body p-0">
+                    <div class="row g-0" style="height: 80vh;">
+                        <!-- Chat Rooms List -->
+                        <div class="col-md-4 border-end">
+                            <div class="chat-rooms-header p-3 bg-light border-bottom">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <h6 class="mb-0">Danh sách Chat</h6>
+                                    <span class="badge bg-primary" id="totalRooms">@Model.ChatRooms.Count()</span>
+                                </div>
+                                <div class="mt-2">
+                                    <ul class="list-group" id="customerList">
+                                        @foreach (var room in Model.ChatRooms)
+                                        {
+                                            <li class="list-group-item customer-item" data-room-id="@room.Id" data-customer-name="@room.CustomerName">
+                                                <strong>@room.CustomerName</strong>
+                                                <span class="badge badge-secondary float-right">@room.Status</span>
+                                            </li>
+                                        }
+                                    </ul>
+                                </div>
+                            </div>
+                            <div class="chat-rooms-list" id="chatRoomsList" style="height: calc(100% - 120px); overflow-y: auto;">
+                                <!-- Chat rooms will be loaded here -->
+                            </div>
+                        </div>
+
+                        <!-- Chat Messages -->
+                        <div class="col-md-8">
+                            <div id="noChatSelected" class="d-flex align-items-center justify-content-center h-100 text-muted">
+                                <div class="text-center">
+                                    <i class="fas fa-comments fa-3x mb-3"></i>
+                                    <h5>Chọn một cuộc trò chuyện để bắt đầu</h5>
+                                    <p>Chọn cuộc trò chuyện từ danh sách bên trái để xem tin nhắn</p>
+                                </div>
+                            </div>
+
+                            <div id="chatArea" class="d-none h-100 d-flex flex-column">
+                                <!-- Chat Header -->
+                                <div class="chat-header p-3 bg-primary text-white border-bottom">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div class="d-flex align-items-center">
+                                            <div class="me-3">
+                                                <i class="fas fa-user-circle fa-2x"></i>
+                                            </div>
+                                            <div>
+                                                <h6 class="mb-0" id="customerName">Customer Name</h6>
+                                                <small id="chatStatus" class="opacity-75">Status</small>
+                                            </div>
+                                        </div>
+                                        <div class="btn-group">
+                                            <button type="button" class="btn btn-sm btn-outline-light" id="refreshChat">
+                                                <i class="fas fa-sync-alt"></i>
+                                            </button>
+                                            <button type="button" class="btn btn-sm btn-outline-light" id="closeChatRoom">
+                                                <i class="fas fa-times"></i> Đóng Chat
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Chat Messages -->
+                                <div class="chat-messages flex-grow-1 p-3" id="chatMessages" style="overflow-y: auto; background-color: #f8f9fa;">
+                                    <!-- Messages will be loaded here -->
+                                </div>
+
+                                <!-- Typing Indicator -->
+                                <div class="typing-indicator px-3" id="typingIndicator" style="display: none;">
+                                    <div class="message message-left">
+                                        <div class="message-content">
+                                            <div class="typing-dots">
+                                                <span></span>
+                                                <span></span>
+                                                <span></span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Chat Input -->
+                                <div class="chat-input p-3 bg-white border-top">
+                                    <form id="messageForm" class="d-flex">
+                                        <input type="hidden" id="selectedChatRoomId" value="" />
+                                        <div class="input-group">
+                                            <input type="text" id="messageInput" class="form-control"
+                                                   placeholder="Nhập tin nhắn..."
+                                                   maxlength="1000" autocomplete="off" />
+                                            <button type="submit" class="btn btn-primary" id="sendButton">
+                                                <i class="fas fa-paper-plane"></i>
+                                            </button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- CSS Styles -->
+<style>
+    .chat-room-item {
+        padding: 1rem;
+        border-bottom: 1px solid #dee2e6;
+        cursor: pointer;
+        transition: background-color 0.2s;
+    }
+
+        .chat-room-item:hover {
+            background-color: #f8f9fa;
+        }
+
+        .chat-room-item.active {
+            background-color: #e3f2fd;
+            border-left: 4px solid #2196f3;
+        }
+
+    .message {
+        margin-bottom: 1rem;
+        display: flex;
+    }
+
+    .message-left {
+        justify-content: flex-start;
+    }
+
+    .message-right {
+        justify-content: flex-end;
+    }
+
+    .message-content {
+        max-width: 70%;
+        padding: 0.75rem 1rem;
+        border-radius: 1rem;
+        word-wrap: break-word;
+    }
+
+    .message-left .message-content {
+        background-color: #ffffff;
+        border: 1px solid #dee2e6;
+        border-bottom-left-radius: 0.25rem;
+    }
+
+    .message-right .message-content {
+        background-color: #007bff;
+        color: white;
+        border-bottom-right-radius: 0.25rem;
+    }
+
+    .message-header {
+        font-size: 0.8rem;
+        margin-bottom: 0.25rem;
+    }
+
+    .message-right .message-header {
+        color: rgba(255,255,255,0.8);
+    }
+
+    .message-text {
+        font-size: 0.9rem;
+        line-height: 1.4;
+    }
+
+    .chat-input {
+        flex-shrink: 0;
+        padding: 1rem;
+        background-color: white;
+        border-top: 1px solid #dee2e6;
+    }
+
+    .typing-indicator {
+        padding: 0 1rem;
+    }
+
+    .typing-dots {
+        display: flex;
+        align-items: center;
+        padding: 0.5rem 1rem;
+    }
+
+        .typing-dots span {
+            height: 8px;
+            width: 8px;
+            background-color: #6c757d;
+            border-radius: 50%;
+            display: inline-block;
+            margin: 0 2px;
+            animation: typing 1.4s infinite ease-in-out;
+        }
+
+            .typing-dots span:nth-child(1) {
+                animation-delay: -0.32s;
+            }
+
+            .typing-dots span:nth-child(2) {
+                animation-delay: -0.16s;
+            }
+
+
+    .chat-status {
+        font-size: 0.8rem;
+    }
+
+</style>
+
+@section Scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.0/signalr.min.js"></script>
+
+    <script type="text/javascript">
+        $(document).ready(function () {
+            console.log('Admin chat script loaded');
+
+            let selectedRoomId = null;
+            let adminId = "@Model.AdminId";
+            let adminName = "@Model.AdminName";
+            let connection = null;
+
+            if (typeof signalR === 'undefined') {
+                console.error('SignalR not loaded!');
+                return;
+            }
+
+            // 1. Tạo kết nối
+            connection = new signalR.HubConnectionBuilder()
+                .withUrl("/chatHub")
+                .configureLogging(signalR.LogLevel.Information)
+                .build();
+
+            // 2. Xử lý khi nhận tin nhắn
+            connection.on("ReceiveMessage", function (message) {
+                // Chỉ hiển thị tin nhắn nếu đang trong phòng đúng
+                if (message.chatRoomId === selectedRoomId) {
+                    appendMessage(message);
+                } else {
+                    // Có thể thêm logic hiện thông báo tin nhắn mới từ phòng khác nếu muốn
+                }
+            });
+
+            // 3. Bắt đầu kết nối
+            connection.start()
+                .then(() => {
+                    console.log("SignalR connected");
+                })
+                .catch(err => console.error(err.toString()));
+
+            // 4. Khi admin nhấn vào 1 customer
+            $(document).on("click", ".customer-item", async function () {
+                let roomId = $(this).data("room-id");
+                let customerName = $(this).data("customer-name");
+
+                if (!roomId) return;
+
+                // Nếu đã chọn phòng khác trước đó thì rời phòng cũ
+                if (selectedRoomId) {
+                    await connection.invoke("LeaveRoom", selectedRoomId);
+                }
+
+                selectedRoomId = roomId;
+                $("#chatWith").text("Chat với: " + customerName);
+                $("#chatBox").empty();
+
+                // Tham gia phòng mới
+                await connection.invoke("JoinRoom", selectedRoomId);
+                loadMessages(selectedRoomId);
+            });
+
+            // 5. Gửi tin nhắn
+            $("#sendButton").click(function () {
+                let message = $("#messageInput").val().trim();
+                if (message && selectedRoomId) {
+                    connection.invoke("SendMessage", {
+                        chatRoomId: selectedRoomId,
+                        senderId: adminId,
+                        senderName: adminName,
+                        senderRole: "admin",
+                        message: message
+                    }).then(() => {
+                        $("#messageInput").val("");
+                    }).catch(err => console.error(err.toString()));
+                }
+            });
+
+            // 6. Hiển thị tin nhắn ra chat box
+            function appendMessage(msg) {
+                let content = `<div><strong>${msg.senderName}:</strong> ${msg.message} <small class="text-muted">(${new Date(msg.sentAt).toLocaleTimeString()})</small></div>`;
+                $("#chatBox").append(content);
+                $("#chatBox").scrollTop($("#chatBox")[0].scrollHeight);
+            }
+
+            // 7. Tải lịch sử tin nhắn từ API
+            function loadMessages(roomId) {
+                $.get(`/Admin/Chat/GetMessages?roomId=${roomId}`, function (messages) {
+                    messages.forEach(msg => appendMessage(msg));
+                });
+            }
+        });
+    </script>
+}
+

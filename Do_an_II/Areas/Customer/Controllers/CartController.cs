@@ -1,6 +1,7 @@
 ﻿using Do_an_II.Models;
 using Do_an_II.Models.ViewModels;
 using Do_an_II.Repository.IRepository;
+using Do_an_II.Services.EmailServices;
 using Do_an_II.Services.VnPay;
 using Do_an_II.Utilities;
 using Do_an_II.Utilities.VNPay;
@@ -18,20 +19,18 @@ namespace Do_an_II.Controllers
     public class CartController : Controller
     {
         private readonly IUnitOfWork _unitOfWork;
-        private readonly IEmailSender _emailSender;
+        private readonly IEmailService _emailService;
         private readonly IHubContext<NotificationHub> _hubContext;
         private readonly IVnPayService _vnPayService;
         [BindProperty]
         public CartVM CartVM { get; set; }
-        public CartController(IUnitOfWork unitOfWork, IEmailSender emailSender,IHubContext<NotificationHub> hubContext, IVnPayService vnPayService)
+        public CartController(IUnitOfWork unitOfWork, IEmailService emailService, IHubContext<NotificationHub> hubContext, IVnPayService vnPayService)
         {
             _unitOfWork = unitOfWork;
-            _emailSender = emailSender;
+            _emailService = emailService;
             _hubContext = hubContext;
            _vnPayService = vnPayService;
         }
-
-
 
 
         public IActionResult Index()
@@ -237,7 +236,8 @@ namespace Do_an_II.Controllers
             _unitOfWork.Save();
 
             HttpContext.Session.Clear();
-
+            _emailService.SendEmailAsync(order.AppUser.Email, "Đơn hàng mới - Eshop",
+                $"<p>Đơn hàng -{order.Id} đã được xác nhận. Cảm ơn bạn đã mua sắm tại cửa hàng của chúng tôi!</p>");
 
             return View(id);
         }

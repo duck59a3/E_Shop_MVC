@@ -1,0 +1,485 @@
+﻿@model ChatVM
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<div class="container-fluid p-0">
+    <div class="row no-gutters h-100">
+        <div class="col-12">
+            <div class="chat-container">
+                <!-- Chat Header -->
+                <div class="chat-header bg-primary text-white p-3">
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-headset me-2"></i>
+                        <div>
+                            <h5 class="mb-0">Hỗ trợ khách hàng</h5>
+                            <small class="chat-status">
+                                @if (Model.ChatRoom.Status == "waiting")
+                                {
+                                    <span class="badge bg-warning">Đang chờ hỗ trợ...</span>
+                                }
+                                else if (Model.ChatRoom.Status == "active")
+                                {
+                                    <span class="badge bg-success">Đang được hỗ trợ bởi @Model.ChatRoom.AdminName</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-secondary">Đã kết thúc</span>
+                                }
+                            </small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Chat Messages -->
+                <div class="chat-messages" id="chatMessages">
+                    @foreach (var message in Model.Messages)
+                    {
+                        <div class="message @(message.SenderRole == "customer" ? "message-right" : "message-left")">
+                            <div class="message-content">
+                                <div class="message-header">
+                                    <strong>@message.SenderName</strong>
+                                    <small class="text-muted">@message.SentAt.ToString("HH:mm dd/MM/yyyy")</small>
+                                </div>
+                                <div class="message-text">@message.Message</div>
+                            </div>
+                        </div>
+                    }
+                </div>
+
+                <!-- Typing Indicator -->
+                <div class="typing-indicator" id="typingIndicator" style="display: none;">
+                    <div class="message message-left">
+                        <div class="message-content">
+                            <div class="typing-dots">
+                                <span></span>
+                                <span></span>
+                                <span></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Chat Input -->
+                <div class="chat-input">
+                    <form id="messageForm" class="d-flex">
+                        <input type="hidden" id="chatRoomId" value="@Model.ChatRoomId" />
+                        <div class="input-group">
+                            <input type="text" id="messageInput" class="form-control"
+                                   placeholder="Nhập tin nhắn của bạn..."
+                                   maxlength="1000" autocomplete="off" />
+                            <button type="submit" class="btn btn-primary" id="sendButton">
+                                <i class="fas fa-paper-plane"></i>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- CSS Styles -->
+<style>
+    .chat-container {
+        height: 80vh;
+        display: flex;
+        flex-direction: column;
+        border: 1px solid #dee2e6;
+        border-radius: 0.5rem;
+        overflow: hidden;
+    }
+
+    .chat-header {
+        flex-shrink: 0;
+        border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .chat-messages {
+        flex: 1;
+        overflow-y: auto;
+        padding: 1rem;
+        background-color: #f8f9fa;
+    }
+
+    .message {
+        margin-bottom: 1rem;
+        display: flex;
+    }
+
+    .message-left {
+        justify-content: flex-start;
+    }
+
+    .message-right {
+        justify-content: flex-end;
+    }
+
+    .message-content {
+        max-width: 70%;
+        padding: 0.75rem 1rem;
+        border-radius: 1rem;
+        word-wrap: break-word;
+    }
+
+    .message-left .message-content {
+        background-color: #ffffff;
+        border: 1px solid #dee2e6;
+        border-bottom-left-radius: 0.25rem;
+    }
+
+    .message-right .message-content {
+        background-color: #007bff;
+        color: white;
+        border-bottom-right-radius: 0.25rem;
+    }
+
+    .message-header {
+        font-size: 0.8rem;
+        margin-bottom: 0.25rem;
+    }
+
+    .message-right .message-header {
+        color: rgba(255,255,255,0.8);
+    }
+
+    .message-text {
+        font-size: 0.9rem;
+        line-height: 1.4;
+    }
+
+    .chat-input {
+        flex-shrink: 0;
+        padding: 1rem;
+        background-color: white;
+        border-top: 1px solid #dee2e6;
+    }
+
+    .typing-indicator {
+        padding: 0 1rem;
+    }
+
+    .typing-dots {
+        display: flex;
+        align-items: center;
+        padding: 0.5rem 1rem;
+    }
+
+        .typing-dots span {
+            height: 8px;
+            width: 8px;
+            background-color: #6c757d;
+            border-radius: 50%;
+            display: inline-block;
+            margin: 0 2px;
+            animation: typing 1.4s infinite ease-in-out;
+        }
+
+            .typing-dots span:nth-child(1) {
+                animation-delay: -0.32s;
+            }
+
+            .typing-dots span:nth-child(2) {
+                animation-delay: -0.16s;
+            }
+
+
+    .chat-status {
+        font-size: 0.8rem;
+
+    }
+</style>
+
+<!-- JavaScript -->
+<!-- JavaScript - COMPLETE VERSION -->
+@section Scripts {
+<script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.0/signalr.min.js"></script>
+
+<script type="text/javascript">
+    $(document).ready(function() {
+        console.log('Customer chat script loaded');
+
+        // Get values from the page
+        const chatRoomId = parseInt($('#chatRoomId').val()) || 0;
+        const userId = '@Model.UserId';
+        const userRole = '@Model.UserRole';
+        const userName = '@Model.UserName';
+
+        console.log('Chat Room ID:', chatRoomId);
+        console.log('User ID:', userId);
+        console.log('User Role:', userRole);
+
+        // Check dependencies
+        if (typeof $ === 'undefined') {
+            console.error('jQuery not loaded!');
+            return;
+        }
+
+        if (typeof signalR === 'undefined') {
+            console.error('SignalR not loaded!');
+            // Continue without SignalR for now
+        }
+
+        let connection = null;
+
+        // Initialize SignalR if available
+        if (typeof signalR !== 'undefined') {
+            connection = new signalR.HubConnectionBuilder()
+                .withUrl("/chatHub")
+                .configureLogging(signalR.LogLevel.Information)
+                .build();
+
+            // Start SignalR connection
+            connection.start().then(function () {
+                console.log('SignalR Connected');
+                return connection.invoke("JoinChatRoom", chatRoomId);
+            }).then(function() {
+                console.log('Joined chat room:', chatRoomId);
+            }).catch(function (err) {
+                console.error('SignalR connection failed:', err);
+                alert('Kết nối real-time thất bại. Chat vẫn hoạt động nhưng không real-time.');
+            });
+
+            // Listen for new messages
+            connection.on("ReceiveMessage", function (message) {
+                console.log('Received SignalR message:', message);
+                appendMessageToChat(message);
+                scrollToBottom();
+            });
+
+            // Listen for typing indicators
+            connection.on("UserTyping", function (userName, isTyping) {
+                if (isTyping) {
+                    showTypingIndicator(userName);
+                } else {
+                    hideTypingIndicator();
+                }
+            });
+
+            // Listen for status updates
+            connection.on("ChatStatusUpdated", function (status, adminName) {
+                updateChatStatus(status, adminName);
+            });
+        }
+
+        // Form submission handler
+        $('#messageForm').on('submit', function(e) {
+            e.preventDefault();
+            console.log('Form submitted via submit event');
+            sendMessage();
+            return false;
+        });
+
+        // Button click handler (backup)
+        $('#sendButton').on('click', function(e) {
+            e.preventDefault();
+            console.log('Send button clicked');
+            sendMessage();
+        });
+
+        // Enter key handler
+        $('#messageInput').on('keypress', function(e) {
+            if (e.which === 13 && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+            }
+        });
+
+        // Typing indicator
+        let typingTimer;
+        $('#messageInput').on('input', function() {
+            if (connection && connection.state === signalR.HubConnectionState.Connected) {
+                clearTimeout(typingTimer);
+
+                // Notify typing
+                connection.invoke("NotifyTyping", chatRoomId, userName, true);
+
+                // Stop typing after 2 seconds
+                typingTimer = setTimeout(function() {
+                    connection.invoke("NotifyTyping", chatRoomId, userName, false);
+                }, 2000);
+            }
+        });
+
+        // Send message function
+        function sendMessage() {
+            const messageText = $('#messageInput').val().trim();
+
+            console.log('Attempting to send message:', messageText);
+
+            if (messageText === '') {
+                console.log('Message is empty, not sending');
+                return;
+            }
+
+            // Disable controls to prevent double submission
+            $('#sendButton').prop('disabled', true);
+            $('#messageInput').prop('disabled', true);
+
+            // Show sending indicator
+            $('#sendButton').html('<i class="fas fa-spinner fa-spin"></i>');
+
+            $.ajax({
+                url: '/Customer/Chat/SendMessage',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({ Message: messageText }),
+                timeout: 10000, // 10 second timeout
+                success: function(response) {
+                    console.log('AJAX Success Response:', response);
+
+                    if (response && response.success) {
+                        console.log('Message sent successfully');
+                        $('#messageInput').val(''); // Clear input
+
+                        // If SignalR is not connected, manually add message
+                        if (!connection || connection.state !== signalR.HubConnectionState.Connected) {
+                            console.log('SignalR not connected, manually adding message to UI');
+                            const manualMessage = {
+                                id: Date.now(),
+                                senderId: userId,
+                                senderName: userName,
+                                senderRole: 'customer',
+                                message: messageText,
+                                sentAt: new Date().toLocaleString('vi-VN', {
+                                    hour: '2-digit',
+                                    minute: '2-digit',
+                                    day: '2-digit',
+                                    month: '2-digit',
+                                    year: 'numeric'
+                                }),
+                                isRead: false
+                            };
+                            appendMessageToChat(manualMessage);
+                        }
+                    } else {
+                        console.error('Server returned error:', response ? response.message : 'Unknown error');
+                        alert('Lỗi: ' + (response ? response.message : 'Không thể gửi tin nhắn'));
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error('AJAX Error Details:');
+                    console.error('Status:', status);
+                    console.error('Error:', error);
+                    console.error('Status Code:', xhr.status);
+                    console.error('Response Text:', xhr.responseText);
+
+                    let errorMessage = 'Có lỗi xảy ra khi gửi tin nhắn';
+
+                    if (xhr.status === 404) {
+                        errorMessage = 'Không tìm thấy action SendMessage. Kiểm tra Controller.';
+                    } else if (xhr.status === 500) {
+                        errorMessage = 'Lỗi server. Kiểm tra logs server.';
+                    } else if (xhr.status === 401) {
+                        errorMessage = 'Bạn cần đăng nhập để gửi tin nhắn.';
+                    } else if (status === 'timeout') {
+                        errorMessage = 'Timeout. Vui lòng thử lại.';
+                    }
+
+                    alert(errorMessage);
+                },
+                complete: function() {
+                    console.log('AJAX request completed');
+                    // Re-enable controls
+                    $('#sendButton').prop('disabled', false);
+                    $('#messageInput').prop('disabled', false);
+                    $('#sendButton').html('<i class="fas fa-paper-plane"></i>');
+                    $('#messageInput').focus();
+                }
+            });
+        }
+
+        // Append message to chat UI
+        function appendMessageToChat(message) {
+            console.log('Adding message to UI:', message);
+
+            const messageClass = message.senderRole === 'customer' ? 'message-right' : 'message-left';
+
+            const messageHtml = `
+                <div class="message ${messageClass}" data-message-id="${message.id}">
+                    <div class="message-content">
+                        <div class="message-header">
+                            <strong>${escapeHtml(message.senderName)}</strong>
+                            <small class="text-muted">${message.sentAt}</small>
+                        </div>
+                        <div class="message-text">${escapeHtml(message.message)}</div>
+                    </div>
+                </div>
+            `;
+
+            $('#chatMessages').append(messageHtml);
+            scrollToBottom();
+        }
+
+        // Show typing indicator
+        function showTypingIndicator(userName) {
+            const typingText = userName + ' đang nhập...';
+            $('#typingIndicator').find('.typing-dots').before(`<small class="typing-user">${escapeHtml(typingText)}</small>`);
+            $('#typingIndicator').show();
+            scrollToBottom();
+        }
+
+        // Hide typing indicator
+        function hideTypingIndicator() {
+            $('#typingIndicator').hide();
+            $('#typingIndicator').find('.typing-user').remove();
+        }
+
+        // Update chat status
+        function updateChatStatus(status, adminName) {
+            let statusHtml = '';
+
+            switch(status) {
+                case 'waiting':
+                    statusHtml = '<span class="badge bg-warning">Đang chờ hỗ trợ...</span>';
+                    break;
+                case 'active':
+                    statusHtml = `<span class="badge bg-success">Đang được hỗ trợ bởi ${escapeHtml(adminName)}</span>`;
+                    break;
+                case 'closed':
+                    statusHtml = '<span class="badge bg-secondary">Đã kết thúc</span>';
+                    break;
+                default:
+                    statusHtml = '<span class="badge bg-secondary">Không xác định</span>';
+            }
+
+            $('.chat-status').html(statusHtml);
+        }
+
+        // Scroll to bottom of chat
+        function scrollToBottom() {
+            const chatMessages = $('#chatMessages')[0];
+            if (chatMessages) {
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            }
+        }
+
+        // Escape HTML to prevent XSS
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Initialize chat
+        function initializeChat() {
+            console.log('Initializing chat...');
+            scrollToBottom();
+            $('#messageInput').focus();
+
+            // Test basic functionality
+            console.log('Chat elements check:');
+            console.log('- Message form:', $('#messageForm').length > 0 ? 'Found' : 'Not found');
+            console.log('- Message input:', $('#messageInput').length > 0 ? 'Found' : 'Not found');
+            console.log('- Send button:', $('#sendButton').length > 0 ? 'Found' : 'Not found');
+            console.log('- Chat messages container:', $('#chatMessages').length > 0 ? 'Found' : 'Not found');
+        }
+
+        // Run initialization
+        initializeChat();
+
+        console.log('Customer chat script initialization complete');
+    });
+</script>
+}
+<!-- Add missing CSS animation for typing indicator -->
