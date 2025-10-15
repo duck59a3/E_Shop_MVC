@@ -4,38 +4,157 @@
     Layout = "~/Areas/Admin/Views/Shared/_LayoutAdmin.cshtml";
 }
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<canvas id="productChart" width="400" height="200"></canvas>
+<h2 class="mb-4">Báo cáo thống kê</h2>
+<!-- KPI Cards -->
+<div class="row mb-4 text-center">
+    <div class="col-md-3">
+        <div class="card shadow-sm p-3 bg-success text-white">
+            <h5>Doanh thu hôm nay</h5>
+            <h3 id="revenueValueToday">@Model.TotalRevenueToday.ToString("N0")</h3>
+        </div>
+    </div>
+    <div class="col-md-3">
+    <div class="card shadow-sm p-3 bg-success text-white">
+        <h5>Tổng Doanh thu</h5>
+            <h3 id="revenueValue">@Model.TotalRevenue.ToString("N0") ₫</h3> 
+    </div>
+</div>
+    <div class="col-md-3">
+        <div class="card shadow-sm p-3 bg-info text-white">
+            <h5>Đơn hàng hôm nay</h5>
+            <h3 id="orderCountToday">@Model.TotalOrdersToday</h3>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card shadow-sm p-3 bg-info text-white">
+            <h5>Tổng số đơn hàng</h5>
+            <h3 id="orderCount">@Model.TotalOrders</h3>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card shadow-sm p-3 bg-primary text-white">
+            <h5>Khách hàng</h5>
+            <h3>@Model.TotalCustomers</h3>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card shadow-sm p-3 bg-warning text-white">
+            <h5>Sản phẩm đã bán</h5>
+            <h3>@Model.TotalSoldProducts</h3>
+        </div>
+    </div>
+</div>
 
+<!-- Biểu đồ -->
+<div class="row">
+    <div class="col-md-6">
+        <canvas id="productChart"></canvas>
+    </div>
+    <div class="col-md-6">
+        <canvas id="revenueChart"></canvas>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6 offset-md-3">
+        <canvas id="topProductChart"></canvas>
+    </div>
+
+    <div class="col-md-6 ">
+        <canvas id="topRegion"></canvas>
+    </div>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.0/signalr.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-    var ctx = document.getElementById('productChart').getContext('2d');
-    var productChart = new Chart(ctx, {
+    const connection = new signalR.HubConnectionBuilder()
+    .withUrl("/DashboardHub")
+    .build();
+
+    connection.start()
+        .then(() => console.log("Connected to ReportHub"))
+        .catch(err => console.error(err));
+
+        connection.on("UpdateDashboard", data => {
+        console.log("Received data:", data);
+        document.querySelector("#revenueValueToday").innerText = `${data.revenue}₫`;
+        document.querySelector("#orderCountToday").innerText = `${data.order}`;
+        document.querySelector("#revenueValue").innerText = `${data.allrevenue}₫`;
+        document.querySelector("#orderCount").innerText = `${data.allorder}`;
+        
+        
+    });
+    // Bar Chart - Sản phẩm
+    const productCtx = document.getElementById('productChart').getContext('2d');
+    new Chart(productCtx, {
         type: 'bar',
         data: {
-            labels: ['Sản phẩm hiện có', 'Sản phẩm đã bán'],
+            labels: ['Tồn kho', 'Đã bán'],
             datasets: [{
                 label: 'Thống kê sản phẩm',
                 data: [@Model.TotalProducts, @Model.TotalSoldProducts],
-                backgroundColor: [
-                    'rgba(75, 192, 192, 0.6)',
-                    'rgba(255, 99, 132, 0.6)'
-                ],
-                borderColor: [
-                    'rgba(75, 192, 192, 1)',
-                    'rgba(255, 99, 132, 1)'
-                ],
-                borderWidth: 1
+                backgroundColor: ['rgba(54, 162, 235, 0.6)', 'rgba(255, 99, 132, 0.6)']
             }]
         },
-        options: {
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    ticks: {
-                        stepSize: 1
-                    }
-                }
-            }
-        }
+        options: { responsive: true, scales: { y: { beginAtZero: true } } }
+    });
+
+    // Line Chart - Doanh thu theo tháng
+    const revenueLabels = @Html.Raw(Json.Serialize(Model.RevenueByMonth.Select(r => r.Month)));
+    const revenueData = @Html.Raw(Json.Serialize(Model.RevenueByMonth.Select(r => r.Revenue)));
+    const revenueCtx = document.getElementById('revenueChart').getContext('2d');
+    new Chart(revenueCtx, {
+        type: 'line',
+        data: {
+            labels: revenueLabels,
+            datasets: [{
+                label: 'Doanh thu theo tháng',
+                data: revenueData,
+                fill: true,
+                borderColor: 'rgba(75, 192, 192, 1)',
+                backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                tension: 0.3
+            }]
+        },
+        options: { responsive: true, scales: { y: { beginAtZero: true } } }
+    });
+
+    // Pie Chart - Top sản phẩm bán chạy
+    const topLabels = @Html.Raw(Json.Serialize(Model.TopProducts.Select(p => p.ProductName)));
+    const topData = @Html.Raw(Json.Serialize(Model.TopProducts.Select(p => p.SoldQuantity)));
+    const topCtx = document.getElementById('topProductChart').getContext('2d');
+    new Chart(topCtx, {
+        type: 'pie',
+        data: {
+            labels: topLabels,
+            datasets: [{
+                label: 'Top 5 sản phẩm bán chạy',
+                data: topData,
+                backgroundColor: [
+                    'rgba(255, 99, 132, 0.6)',
+                    'rgba(54, 162, 235, 0.6)',
+                    'rgba(255, 206, 86, 0.6)',
+                    'rgba(75, 192, 192, 0.6)',
+                    'rgba(153, 102, 255, 0.6)'
+                ]
+            }]
+        },
+        options: { responsive: true }
+    });
+
+    const topRegionLabels = @Html.Raw(Json.Serialize(Model.TotalOrdersByRegion.Select(r => r.Region)));
+    const topRegionData = @Html.Raw(Json.Serialize(Model.TotalOrdersByRegion.Select(r => r.OrderCount)));
+    const topRegionCtx = document.getElementById('topRegion').getContext('2d');
+    new Chart(topRegionCtx, {
+        type: 'bar',
+        data: {
+            labels: topRegionLabels,
+            datasets: [{
+                label: 'Thống kê đơn hàng theo khu vực',
+                data: topRegionData,
+                backgroundColor: 'rgba(255, 159, 64, 0.6)'
+            }]
+        },
+        options: { responsive: true, scales: { y: { beginAtZero: true } } }
     });
 </script>

@@ -15,14 +15,21 @@
 
                     <div class="form-floating mb-3">
                         <label asp-for="Input.Email">Email</label>
-                        <input asp-for="Input.Email" class="form-control" placeholder="name@example.com" autocomplete="username" aria-required="true" />
+                        <input asp-for="Input.Email" class="form-control" placeholder="name@example.com" autocomplete="username" aria-required="true"/>
                         <span asp-validation-for="Input.Email" class="text-danger"></span>
                     </div>
 
                     <div class="form-floating mb-3">
                         <label asp-for="Input.Password">Mật khẩu</label>
-                        <input asp-for="Input.Password" class="form-control" placeholder="password" autocomplete="current-password" aria-required="true" />
+                        <div class="input-group">
+                        <input asp-for="Input.Password" class="form-control" placeholder="password" autocomplete="current-password" aria-required="true" id="passwordInput" />
+                            <button type="button" class="btn btn-outline-secondary" id="togglePassword">
+                                <i class="bi bi-eye"></i>
+                            </button>
+                    </div>
                         <span asp-validation-for="Input.Password" class="text-danger"></span>
+
+                        
                     </div>
 
                     <div class="form-check mb-3">
@@ -63,4 +70,18 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+    <script>
+        const togglePassword = document.getElementById("togglePassword");
+        const passwordInput = document.getElementById("passwordInput");
+
+        togglePassword.addEventListener("click", function () {
+            const type = passwordInput.getAttribute("type") === "password" ? "text" : "password";
+            passwordInput.setAttribute("type", type);
+
+
+            const icon = this.querySelector("i");
+            icon.classList.toggle("bi-eye");
+            icon.classList.toggle("bi-eye-slash");
+        });
+    </script>
 }

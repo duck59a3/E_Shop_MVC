@@ -3,5 +3,6 @@
     public class SessionSettings
     {
         public const string SessionCart = "SessionCart";
+        
     }
 }

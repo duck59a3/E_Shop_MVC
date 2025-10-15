@@ -32,7 +32,7 @@ namespace Do_an_II.Services.ChatServices
             if (chatRoom != null)
             {
                 chatRoom.LastMessageAt = DateTime.Now;
-                if (chatRoom.Status == "waiting" && senderRole == "admin")
+                if (chatRoom.Status == "waiting" && senderRole.ToLower() == "admin")
                 {
                     chatRoom.Status = "active";
                     chatRoom.AdminId = senderId;

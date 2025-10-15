@@ -11,6 +11,7 @@
         IProductImageRepository ProductImage { get; }
         IReviewRepository Review { get; }
         INotificationRepository Notification { get; }
+        IDashboardRepository Dashboard { get; }
         void Save();
     }
 }

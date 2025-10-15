@@ -75,6 +75,7 @@ app.UseAuthentication();
 app.UseAuthorization();
 app.UseSession();
 app.MapHub<ChatHub>("/ChatHub");
+app.MapHub<DashboardHub>("/DashboardHub");
 
 SeedDatabase();
 app.MapRazorPages();

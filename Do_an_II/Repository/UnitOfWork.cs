@@ -15,6 +15,7 @@ namespace Do_an_II.Repository
         public IProductImageRepository ProductImage { get; private set; }
         public IReviewRepository Review { get; private set; }
         public INotificationRepository Notification { get; private set; }
+        public IDashboardRepository Dashboard { get; private set; }
 
         public UnitOfWork(ApplicationDbContext db) 
         {
@@ -27,6 +28,8 @@ namespace Do_an_II.Repository
             OrderDetail = new OrderDetailRepository(_db);
             ProductImage = new ProductImageRepository(_db);
             Review = new ReviewRepository(_db);
+            Dashboard = new DashboardRepository(_db);
+            Notification = new NotificationRepository(_db);
         }
 
 

@@ -48,7 +48,19 @@ namespace Do_an_II.Controllers
             var claimsIdentity = (ClaimsIdentity)User.Identity;
             var userId = claimsIdentity.FindFirst(ClaimTypes.NameIdentifier).Value;
             cart.AppUserId = userId;
+            var productFromDb = _unitOfWork.Product.Get(u => u.Id == cart.ProductId, true);
+            if (productFromDb == null)
+            {
+                TempData["error"] = "Sản phẩm không tồn tại.";
+                return RedirectToAction(nameof(Index));
+            }
 
+            // Kiểm tra vượt quá tồn kho
+            if (cart.Count > productFromDb.Quantity)
+            {
+                TempData["error"] = $"Số lượng yêu cầu ({cart.Count}) vượt quá tồn kho hiện có ({productFromDb.Quantity}).";
+                return RedirectToAction(nameof(Index));
+            }
             Cart cartFromDb = _unitOfWork.Cart.Get(u => u.AppUserId == userId && u.ProductId == cart.ProductId);
             if (cartFromDb == null)
             {
@@ -64,6 +76,8 @@ namespace Do_an_II.Controllers
                 _unitOfWork.Cart.Update(cartFromDb);
                 _unitOfWork.Save();
             }
+            productFromDb.Quantity -= cart.Count;
+            _unitOfWork.Product.Update(productFromDb);
             TempData["success"] = "Thêm vào giỏ hàng thành công";
             
             return RedirectToAction(nameof(Index));

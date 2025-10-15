@@ -1,22 +1,29 @@
-﻿using Do_an_II.Models.ViewModels;
+﻿using Do_an_II.Hubs;
+using Do_an_II.Models.ViewModels;
+using Do_an_II.Repository.IRepository;
 using Do_an_II.Services.ChatServices;
 using Do_an_II.Utilities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 using System.Security.Claims;
 
 namespace Do_an_II.Areas.Admin.Controllers
 {
     [Area("Admin")]
     [Route("Admin/[controller]/[action]")]
-    [Authorize(Roles = Roles.Admin)]
+    //[Authorize(Roles = Roles.Admin)]
     public class ChatController : Controller
     {
         private readonly IChatService _chatService;
+        private readonly IHubContext<ChatHub> _hubContext;
+        private readonly IUnitOfWork _unitOfWork;
 
-        public ChatController(IChatService chatService)
+        public ChatController(IChatService chatService, IHubContext<ChatHub> hubContext, IUnitOfWork unitOfWork)
         {
             _chatService = chatService;
+            _hubContext = hubContext;
+            _unitOfWork = unitOfWork;
         }
         [HttpGet]
         public async Task<IActionResult> Index()
@@ -43,9 +50,18 @@ namespace Do_an_II.Areas.Admin.Controllers
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
             var chatRoom = await _chatService.GetChatRoomAsync(chatRoomId);
+
+            
             if (chatRoom == null)
             {
                 return Json(new { success = false, message = "Không tìm thấy phòng chat" });
+            }
+            if (chatRoom.AdminId == null)
+            {
+                chatRoom.AdminId = userId;
+                chatRoom.AdminName = User.Identity?.Name;
+                chatRoom.Status = "active";
+                _unitOfWork.Save();
             }
 
             var messages = await _chatService.GetChatMessagesAsync(chatRoomId);
@@ -107,22 +123,25 @@ namespace Do_an_II.Areas.Admin.Controllers
                 var message = await _chatService.AddMessageAsync(
                     model.ChatRoomId, userId, userName, "admin", model.Message);
 
-                return Json(new
+                var messageData = new
                 {
-                    success = true,
-                    message = new
-                    {
-                        id = message.Id,
-                        chatRoomId = message.ChatRoomId,
-                        senderId = message.SenderId,
-                        senderName = message.SenderName,
-                        senderRole = message.SenderRole,
-                        message = message.Message,
-                        sentAt = message.SentAt.ToString("HH:mm dd/MM/yyyy"),
-                        isRead = message.IsRead
-                    }
-                });
+                    id = message.Id,
+                    chatRoomId = message.ChatRoomId,
+                    senderId = message.SenderId,
+                    senderName = message.SenderName,
+                    senderRole = message.SenderRole,
+                    message = message.Message,
+                    sentAt = message.SentAt.ToString("HH:mm dd/MM/yyyy"),
+                    isRead = message.IsRead
+                };
+
+                
+                await _hubContext.Clients.Group($"ChatRoom_{model.ChatRoomId}")
+                    .SendAsync("ReceiveMessage", messageData);
+
+                return Json(new { success = true, message = messageData });
             }
+
             catch (Exception ex)
             {
                 return Json(new { success = false, message = "Có lỗi xảy ra khi gửi tin nhắn" });

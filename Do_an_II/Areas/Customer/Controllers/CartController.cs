@@ -1,4 +1,5 @@
-﻿using Do_an_II.Models;
+﻿using Do_an_II.Hubs;
+using Do_an_II.Models;
 using Do_an_II.Models.ViewModels;
 using Do_an_II.Repository.IRepository;
 using Do_an_II.Services.EmailServices;
@@ -20,16 +21,17 @@ namespace Do_an_II.Controllers
     {
         private readonly IUnitOfWork _unitOfWork;
         private readonly IEmailService _emailService;
-        private readonly IHubContext<NotificationHub> _hubContext;
+        private readonly IHubContext<DashboardHub> _dashboardHubContext;
         private readonly IVnPayService _vnPayService;
+
         [BindProperty]
         public CartVM CartVM { get; set; }
-        public CartController(IUnitOfWork unitOfWork, IEmailService emailService, IHubContext<NotificationHub> hubContext, IVnPayService vnPayService)
+        public CartController(IUnitOfWork unitOfWork, IEmailService emailService, IVnPayService vnPayService, IHubContext<DashboardHub> dashboardHubContext)
         {
             _unitOfWork = unitOfWork;
             _emailService = emailService;
-            _hubContext = hubContext;
            _vnPayService = vnPayService;
+            _dashboardHubContext = dashboardHubContext;
         }
 
 
@@ -122,7 +124,14 @@ namespace Do_an_II.Controllers
                 _unitOfWork.OrderDetail.Add(orderDetail);
                 _unitOfWork.Save();
             }
+            _dashboardHubContext.Clients.All.SendAsync("UpdateDashboard", new
+            {
+                order = _unitOfWork.Dashboard.GetTotalOrdersToday(),
+                revenue = _unitOfWork.Dashboard.GetTotalRevenueToday(),
+                allorder = _unitOfWork.Dashboard.GetTotalOrders(),
+                allrevenue = _unitOfWork.Dashboard.GetTotalRevenue()
 
+            });
 
 
             if (paymentMethod == "stripe")
@@ -193,6 +202,7 @@ namespace Do_an_II.Controllers
             {
                 return RedirectToAction(nameof(OrderConfirmation), new { id = CartVM.Order.Id });
             }
+            
         }
 
         public IActionResult OrderConfirmation(int id)

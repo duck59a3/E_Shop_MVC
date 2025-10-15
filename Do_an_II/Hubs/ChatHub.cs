@@ -22,7 +22,7 @@ namespace Do_an_II.Hubs
         public override async Task OnConnectedAsync()
         {
             
-            var userRole = Context.User?.FindFirst("Role")?.Value ?? "Customer";
+            var userRole = Context.User?.FindFirst("Role")?.Value.ToLower() ?? "Customer";
             var userId = Context.UserIdentifier;
 
             if (userRole == "Admin")
@@ -40,7 +40,7 @@ namespace Do_an_II.Hubs
         public override async Task OnDisconnectedAsync(Exception? exception)
         {
             var userId = Context.UserIdentifier;
-            var userRole = Context.User?.FindFirst("Role")?.Value ?? "Customer";
+            var userRole = Context.User?.FindFirst("Role")?.Value.ToLower() ?? "Customer";
 
             if (userRole == "Admin")
             {
@@ -83,12 +83,12 @@ namespace Do_an_II.Hubs
             if (chatRoom != null)
             {
                 chatRoom.LastMessageAt = DateTime.Now;
-                if (chatRoom.Status == "waiting" && userRole == "admin")
-                {
-                    chatRoom.Status = "active";
-                    chatRoom.AdminId = userId;
-                    chatRoom.AdminName = userName;
-                }
+                //if (chatRoom.Status == "waiting" && userRole == "admin")
+                //{
+                //    chatRoom.Status = "active";
+                //    chatRoom.AdminId = userId;
+                //    chatRoom.AdminName = userName;
+                //}
             }
 
             await _db.SaveChangesAsync();
