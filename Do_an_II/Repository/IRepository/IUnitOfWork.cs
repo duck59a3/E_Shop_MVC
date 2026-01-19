@@ -12,6 +12,8 @@
         IReviewRepository Review { get; }
         INotificationRepository Notification { get; }
         IDashboardRepository Dashboard { get; }
+        IVoucherRepository Voucher { get; }
+        IVoucherUsageRepository VoucherUsage { get; }
         void Save();
     }
 }

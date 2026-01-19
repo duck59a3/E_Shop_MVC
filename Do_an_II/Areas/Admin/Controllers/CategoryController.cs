@@ -1,11 +1,14 @@
 ﻿using Do_an_II.Data;
 using Do_an_II.Models;
+using Do_an_II.Models.Dto;
 using Do_an_II.Repository.IRepository;
+using Do_an_II.Services.RedisServices;
 using Do_an_II.Utilities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
+using System.Diagnostics;
 
 namespace Do_an_II.Areas.Admin.Controllers
 {
@@ -15,30 +18,49 @@ namespace Do_an_II.Areas.Admin.Controllers
     public class CategoryController : Controller
     {
         private readonly IUnitOfWork _unitOfWork;
-        private readonly IMemoryCache _memoryCache;
-        public CategoryController(IUnitOfWork db, IMemoryCache memoryCache)
+        private readonly IRedisService _cache;
+        public CategoryController(IUnitOfWork db,IRedisService redisService)
         {
             _unitOfWork = db;
-            _memoryCache = memoryCache;
+           
+            _cache = redisService;
         }
+
+        //public IActionResult Index()
+        //{
+        //    var cacheKey = "CategoryListCache";
+        //    if (!_memoryCache.TryGetValue(cacheKey, out List<Category> categorylst))
+        //    {
+        //        // If cache is not available, fetch data from the database
+        //        categorylst = _unitOfWork.Category.GetAll().ToList();
+        //        // Set cache options
+        //        var cacheEntryOptions = new MemoryCacheEntryOptions()
+        //            .SetSlidingExpiration(TimeSpan.FromMinutes(5)); // Cache for 5 minutes
+        //        // Save data in cache
+        //        _memoryCache.Set(cacheKey, categorylst, cacheEntryOptions);
+        //    }
+        //    //List<Category> categorylst = _unitOfWork.Category.GetAll().ToList();
+        //    return View(categorylst);
+        //}
 
         public IActionResult Index()
         {
-            var cacheKey = "CategoryListCache";
-            if (!_memoryCache.TryGetValue(cacheKey, out List<Category> categorylst))
+            var sw = Stopwatch.StartNew();
+            var categoryLst = _cache.GetData<IEnumerable<Category>>("categories");
+            Console.WriteLine($"Lấy dữ liệu từ cache {sw.ElapsedMilliseconds} ms");
+            sw.Stop();
+            if (categoryLst == null)
             {
-                // If cache is not available, fetch data from the database
-                categorylst = _unitOfWork.Category.GetAll().ToList();
-                // Set cache options
-                var cacheEntryOptions = new MemoryCacheEntryOptions()
-                    .SetSlidingExpiration(TimeSpan.FromMinutes(5)); // Cache for 5 minutes
-                // Save data in cache
-                _memoryCache.Set(cacheKey, categorylst, cacheEntryOptions);
+                sw.Restart();
+                categoryLst = _unitOfWork.Category.GetAll().ToList();
+                _cache.SetData("categories", categoryLst, TimeSpan.FromMinutes(5));
+                Console.WriteLine($"Lấy dữ liệu từ DB và lưu vào cache {sw.ElapsedMilliseconds} ms");
+                sw.Stop();
             }
-            //List<Category> categorylst = _unitOfWork.Category.GetAll().ToList();
-            return View(categorylst);
+           
+            return View(categoryLst);
+            
         }
-
         public IActionResult Create()
         {
             return View();

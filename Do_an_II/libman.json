@@ -4,14 +4,10 @@
   "libraries": [
     {
       "library": "jquery@3.7.1",
-      "destination": "wwwroot/LayoutAdmin/assets/lib/jquery/",
+      "destination": "wwwroot/lib/jquery",
       "files": [
-        "jquery.js",
         "jquery.min.js",
-        "jquery.min.map",
-        "jquery.slim.js",
-        "jquery.slim.min.js",
-        "jquery.slim.min.map"
+        "jquery.js"
       ]
     }
   ]

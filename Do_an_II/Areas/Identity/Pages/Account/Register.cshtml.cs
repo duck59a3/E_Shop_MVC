@@ -160,6 +160,10 @@ namespace Do_an_II.Areas.Identity.Pages.Account
                 user.Address = Input.Address;
                 user.City = Input.City;
                 user.PhoneNumber = Input.PhoneNumber;
+                user.TotalOrders = 0;
+                user.TotalSpent = 0;
+                user.MemberLevel = MemberLevel.Bronze;
+
 
                 var result = await _userManager.CreateAsync(user, Input.Password);
 

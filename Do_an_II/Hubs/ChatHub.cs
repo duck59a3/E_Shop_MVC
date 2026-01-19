@@ -1,5 +1,6 @@
 ﻿using Do_an_II.Data;
 using Do_an_II.Models;
+using Do_an_II.Models.ViewModels;
 using Do_an_II.Repository.IRepository;
 using Do_an_II.Services.ChatServices;
 using Microsoft.AspNetCore.SignalR;
@@ -58,7 +59,7 @@ namespace Do_an_II.Hubs
         {
             var userId = Context.UserIdentifier;
             var userName = Context.User?.Identity?.Name;
-            var userRole = Context.User?.FindFirst("Role")?.Value ?? "customer";
+            var userRole = Context.User?.FindFirst("Role")?.Value ?? "Customer";
 
             if (string.IsNullOrEmpty(message) || string.IsNullOrEmpty(userId))
                 return;
@@ -106,20 +107,41 @@ namespace Do_an_II.Hubs
                 IsRead = chatMessage.IsRead
             };
 
-            if (userRole == "customer")
+            await Clients.Group($"ChatRoom_{chatRoomId}").SendAsync("ReceiveMessage", messageData);
+        }
+
+        public async Task SendAdminMessage(AdminSendMessageVM model)
+        {
+            var chatRoom = await _chatService.GetChatRoomAsync(model.ChatRoomId);
+            if (chatRoom == null) return;
+
+            // Lưu tin nhắn vào DB
+            var chatMessage = await _chatService.AddMessageAsync(
+                model.ChatRoomId,
+                model.SenderId,
+                model.SenderName,
+                model.SenderRole,
+                model.Message.Trim()
+            );
+
+            var messageData = new
             {
-                // Gửi đến admin
-                await Clients.Group("AdminGroup").SendAsync("ReceiveMessage", messageData);
-                // Gửi lại cho customer để confirm
-                await Clients.Group($"Customer_{userId}").SendAsync("ReceiveMessage", messageData);
-            }
-            else if (userRole == "admin")
-            {
-                // Gửi đến customer cụ thể
-                await Clients.Group($"Customer_{chatRoom.CustomerId}").SendAsync("ReceiveMessage", messageData);
-                // Gửi lại cho admin để confirm
-                await Clients.Group("AdminGroup").SendAsync("ReceiveMessage", messageData);
-            }
+                Id = chatMessage.Id,
+                ChatRoomId = chatMessage.ChatRoomId,
+                SenderId = chatMessage.SenderId,
+                SenderName = chatMessage.SenderName,
+                SenderRole = chatMessage.SenderRole,
+                Message = chatMessage.Message,
+                SentAt = chatMessage.SentAt.ToString("HH:mm dd/MM/yyyy"),
+                IsRead = chatMessage.IsRead
+            };
+
+            // Gửi tới customer đúng phòng
+            await Clients.Group($"Customer_{chatRoom.CustomerId}")
+                .SendAsync("ReceiveMessage", messageData);
+
+            // Gửi lại cho admin để confirm
+            await Clients.Caller.SendAsync("ReceiveMessage", messageData);
         }
 
         public async Task JoinChatRoom(int chatRoomId)

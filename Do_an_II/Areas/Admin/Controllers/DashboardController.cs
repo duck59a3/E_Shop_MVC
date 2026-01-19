@@ -21,17 +21,8 @@ namespace Do_an_II.Areas.Admin.Controllers
             var totalSold = _unitOfWork.OrderDetail.GetAll()
                               .Sum(od => od.Count);
 
-            //Doanh thu tháng
-            var revenueByMonth = _unitOfWork.OrderDetail.GetAll(includeProperties: "Order")
-                        .Where(o => o.Order.OrderDate.Year == DateTime.Now.Year)
-                        .GroupBy(o => o.Order.OrderDate.Month)
-                        .Select(g => new MonthlyRevenue
-                        {
-                            Month = new DateTime(DateTime.Now.Year, g.Key, 1).ToString("MMM"),
-                            Revenue = g.Sum(x => x.Count * x.Price)
-                        })
-                        .OrderBy(g => g.Month)
-                        .ToList();
+           
+            
 
             // Top 5 sản phẩm bán chạy
             var topProducts = _unitOfWork.OrderDetail.GetAll(includeProperties: "Product")
@@ -63,7 +54,7 @@ namespace Do_an_II.Areas.Admin.Controllers
             var totalRevenueToday = _unitOfWork.OrderDetail.GetAll(includeProperties: "Order")
                                     .Where(o => o.Order.OrderDate.Date == DateTime.Now.Date)
                                     .Sum(o => o.Price * o.Count);
-            
+
             var totalOrders = _unitOfWork.Order.GetAll().Count();
             var totalOrdersToday = _unitOfWork.Order.GetAll()
                                     .Where(o => o.OrderDate.Date == DateTime.Now.Date)
@@ -74,19 +65,103 @@ namespace Do_an_II.Areas.Admin.Controllers
             {
                 TotalProducts = totalProducts,
                 TotalSoldProducts = totalSold,
-                TotalRevenue = totalRevenue,
-                TotalOrders = totalOrders,
+                
                 TotalCustomers = totalCustomers,
-                TotalOrdersToday = totalOrdersToday,
-                TotalRevenueToday = totalRevenueToday,
-                RevenueByMonth = revenueByMonth,
+               
                 TopProducts = topProducts,
                 TotalOrdersByRegion = topRegions
 
             };
 
             return View(viewModel);
-            
+
+        }
+        public IActionResult DoanhThu()
+        {
+            var totalRevenue = _unitOfWork.OrderDetail.GetAll().Sum(o => o.Price * o.Count);
+            var totalRevenueToday = _unitOfWork.OrderDetail.GetAll(includeProperties: "Order")
+                                    .Where(o => o.Order.OrderDate.Date == DateTime.Now.Date)
+                                    .Sum(o => o.Price * o.Count);
+            var totalOrders = _unitOfWork.Order.GetAll().Count();
+            var totalOrdersToday = _unitOfWork.Order.GetAll()
+                                    .Where(o => o.OrderDate.Date == DateTime.Now.Date)
+                                    .Count();
+            var revenueByMonth = _unitOfWork.OrderDetail.GetAll(includeProperties: "Order")
+                        .Where(o => o.Order.OrderDate.Year == DateTime.Now.Year)
+                        .GroupBy(o => o.Order.OrderDate.Month)
+                        .Select(g => new MonthlyRevenue
+                        {
+                            Month = new DateTime(DateTime.Now.Year, g.Key, 1).ToString("MMM"),
+                            Revenue = g.Sum(x => x.Count * x.Price)
+                        })
+                        .OrderBy(g => g.Month)
+                        .ToList();
+            var revenuebyCategory = _unitOfWork.OrderDetail.GetAll(includeProperties: "Product,Product.Category")
+                        .GroupBy(od => od.Product.Category.Name)
+                        .Select(g => new CategoryRevenue
+                        {
+                            CategoryName = g.Key,
+                            Revenue = g.Sum(x => x.Count * x.Price)
+                        })
+                        .OrderByDescending(g => g.Revenue)
+                        .ToList();
+            var doanhThu = new RevenueVM
+            {   TotalRevenueToday = totalRevenueToday,
+                TotalOrdersToday = totalOrdersToday,
+                TotalRevenue = totalRevenue,
+                TotalOrders = totalOrders,
+                RevenueByMonth = revenueByMonth,
+                RevenueByCategory = revenuebyCategory
+
+            };
+            return View(doanhThu);
+        }
+        public IActionResult KhachHang()
+        {
+
+            var customers = _unitOfWork.AppUser.GetAll().Select(u => new CustomerReportVM
+            {
+                UserId = u.Id,
+                Name = u.Name,
+                Email = u.Email,
+                TotalOrders = u.TotalOrders,
+                TotalSpent = u.TotalSpent,
+                MemberLevel = u.MemberLevel
+            }).ToList();
+            var levelCounts = customers.GroupBy(c => c.MemberLevel)
+                                   .ToDictionary(g => g.Key, g => g.Count());
+
+            var ordersPerCustomer = customers
+           .OrderByDescending(c => c.TotalOrders)
+           .ToList();
+            // 3. Pareto 80/20 khách hàng
+            var totalRevenue = customers.Sum(c => c.TotalSpent);
+            var paretoData = customers
+                .OrderByDescending(c => c.TotalSpent)
+                .ToList();
+
+            double cumulative = 0.0;
+            var paretoLabels = new List<string>();
+            var paretoRevenue = new List<double>();
+            var paretoCumulativePercent = new List<double>();
+
+            foreach (var c in paretoData)
+            {
+                cumulative += c.TotalSpent;
+                paretoLabels.Add(c.Name);
+                paretoRevenue.Add(c.TotalSpent);
+                paretoCumulativePercent.Add(cumulative / totalRevenue * 100);
+            }
+            ViewBag.LevelCounts = levelCounts;
+            ViewBag.OrdersPerCustomer = ordersPerCustomer;
+            ViewBag.ParetoLabels = paretoLabels;
+            ViewBag.ParetoRevenue = paretoRevenue;
+            ViewBag.ParetoCumulativePercent = paretoCumulativePercent;
+            var customerReport = new CustomerReportVM
+            {
+
+            };
+            return View(customerReport);
         }
     }
 }

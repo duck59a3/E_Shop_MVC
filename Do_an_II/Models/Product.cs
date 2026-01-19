@@ -49,8 +49,10 @@ namespace Do_an_II.Models
         public Category Category { get; set; }
         [ValidateNever]
         public List<ProductImage> ProductImages { get; set; }
+        [ValidateNever]
+        public List<Review> Reviews { get; set; }
 
 
-    }
+        }
 }
 

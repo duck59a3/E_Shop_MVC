@@ -1,10 +1,13 @@
 ﻿using Do_an_II.Models;
 using Do_an_II.Models.ViewModels;
 using Do_an_II.Repository.IRepository;
+using Do_an_II.Services.RedisServices;
 using Do_an_II.Utilities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using StackExchange.Redis;
+using System.Threading.Tasks;
 
 namespace Do_an_II.Areas.Admin.Controllers
 {
@@ -15,14 +18,31 @@ namespace Do_an_II.Areas.Admin.Controllers
     {
         private readonly IUnitOfWork _unitOfWork;
         private readonly IWebHostEnvironment _webHostEnvironment;
-        public ProductController(IUnitOfWork db, IWebHostEnvironment webHostEnvironment)
+        private readonly IRedisService _redisService;
+        private readonly IDatabase _db;
+        public ProductController(IUnitOfWork db, IWebHostEnvironment webHostEnvironment, IRedisService redisService, IConnectionMultiplexer redis)
         {
             _unitOfWork = db;
             _webHostEnvironment = webHostEnvironment;
+            _redisService = redisService;
+            _db = redis.GetDatabase();
         }
-        public IActionResult Index()
+        public async Task<IActionResult> Index()
         {
             List<Product> productlst = _unitOfWork.Product.GetAll(includeProperties: "Category").ToList();
+            var flashSaleMap = new Dictionary<int, decimal?>();
+
+            foreach (var p in productlst)
+            {
+                var flashSaleId = await _redisService.GetActiveFlashSaleIdAsync(p.Id);
+                if (!string.IsNullOrEmpty(flashSaleId))
+                {
+                    var price = await _redisService.GetFlashSalePriceAsync(flashSaleId, p.Id);
+                    flashSaleMap[p.Id] = price;
+                }
+            }
+
+            ViewBag.FlashSaleMap = flashSaleMap;
 
             return View(productlst);
         }
@@ -154,11 +174,82 @@ namespace Do_an_II.Areas.Admin.Controllers
             }
             return RedirectToAction(nameof(Upsert),new {id= productId});
         }
+
+        [HttpGet]
+        public IActionResult FlashSale(int id)
+        {
+            var product = _unitOfWork.Product.Get(u => u.Id == id);
+            if (product == null) return NotFound();
+
+            return View(new FlashSaleVM
+            {
+                ProductId = product.Id,
+                FlashPrice = product.Price,
+                Quantity = 10,
+                DurationMinutes = 60
+            });
+        }
+        [HttpPost]
+        public IActionResult FlashSale(FlashSaleVM vm)
+        {
+            var duration = TimeSpan.FromMinutes(vm.DurationMinutes);
+            var flashSaleEndTime = DateTimeOffset.UtcNow.Add(duration);
+            string flashSaleId = Guid.NewGuid().ToString();
+            _db.SetAddAsync("flashsale:active", flashSaleId);
+            _db.SetAddAsync($"flashsale:{flashSaleId}:products", vm.ProductId);
+            _redisService.SetFlashSalePriceAsync(flashSaleId,vm.ProductId, vm.FlashPrice, duration);
+
+            _redisService.InitFlashSaleStockAsync(flashSaleId, vm.ProductId, vm.Quantity, duration);
+            _redisService.SetFlashSaleEndTimeAsync(flashSaleId, vm.ProductId, flashSaleEndTime, duration);
+            
+            TempData["success"] = "Đã bật Flash Sale";
+            return RedirectToAction(nameof(Index));
+        }
+
         #region API Calls
         [HttpGet]
-        public IActionResult GetAll()
+        public async Task<IActionResult> GetAll()
         {
-            var productList = _unitOfWork.Product.GetAll(includeProperties: "Category").ToList();
+            var products = _unitOfWork.Product.GetAll(includeProperties: "Category")
+                .Select(p => new
+                {
+                    p.Id,
+                    p.Name,
+                    p.Price,
+                    p.Quantity,
+                    CategoryName = p.Category.Name,
+                })
+                .ToList();
+            var productList = new List<object>();
+
+            foreach (var p in products)
+            {
+                var flashSaleId = await _redisService.GetActiveFlashSaleIdAsync(p.Id);
+
+                bool isFlashSale = !string.IsNullOrEmpty(flashSaleId);
+
+                decimal? flashPrice = null;
+                int? flashStock = null;
+                if (isFlashSale)
+                {
+                    flashPrice = await _redisService.GetFlashSalePriceAsync(flashSaleId, p.Id);
+                    flashStock = await _redisService.GetFlashSaleStockAsync(flashSaleId, p.Id);
+                }
+                
+                
+                
+                
+
+                productList.Add(new
+                {
+                    p.Id,
+                    p.Name,
+                    Price = isFlashSale ? flashPrice : p.Price,
+                    Quantity = isFlashSale ? flashStock : p.Quantity,
+                    p.CategoryName,
+                    IsFlashSale = isFlashSale
+                });
+            }
             return Json(new { data = productList });
         }
         [HttpDelete("{id}")]

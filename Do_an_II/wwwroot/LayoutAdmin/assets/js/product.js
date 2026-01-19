@@ -7,25 +7,40 @@ $(document).ready(function () {
 function loadDataTable() {
     // Initialize DataTable with AJAX source
     dataTable = $('#productTable').DataTable({
-
+        responsive: true,
+        autoWidth: false,
         "ajax": {
             url: '/admin/product/getall',
 
         },
         "columns": [
-            { data: 'name', "width": "15%" },
-            { data: 'description', "width": "25%" },
-            { data: 'price', "width": "25%" },
-            { data: 'quantity', "width": "25%" },
-            { data: 'size', "width": "25%" },
-            { data: 'color', "width": "25%" },
-            { data: 'material', "width": "25%" },
-            { data: 'category.name', "width": "25%" },
+            { data: 'name', "width": "10%" },
+            //{ data: 'description', "width": "10%" },
+            { data: 'price', "width": "15%" },
+            { data: 'quantity', "width": "10%" },
+            //{ data: 'size', "width": "10%" },
+            //{ data: 'color', "width": "10%" },
+            //{ data: 'material', "width": "10%" },
+            { data: 'categoryName', "width": "5%" },
+            {
+                data: 'isFlashSale',
+                width: "10%",
+                render: function (data) {
+                    if (data) {
+                        return `<span class="badge bg-danger">FLASH SALE</span>`;
+                    }
+                    return `<span class="badge bg-secondary">---</span>`;
+                }
+            },
             {
                 data: 'id', "width": "25%", render: function
                     (data) {
                     return `<div class="w-75 btn-group" role="group" >
                     <a href="/admin/product/upsert?id=${data}" class="btn btn-primary mx-2"><i class="bi bi-pencil-square"></i>Sửa </a>
+                    <a href="/admin/product/flashsale?id=${data}" 
+                           class="btn btn-sm btn-warning mx-1">
+                           Flash Sale
+                        </a>
                     <a onClick=Delete('/admin/product/delete/${data}') class="btn btn-danger mx-2"><i class="bi bi-trash"></i>Xóa </a>
 
                     </div>`

@@ -4,5 +4,7 @@ namespace Do_an_II.Repository.IRepository
 {
     public interface IAppUserRepository : IRepository<AppUser>
     {
+        void Update(AppUser user);
+        
     }
 }

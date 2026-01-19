@@ -9,5 +9,8 @@ namespace Do_an_II.Models.ViewModels
 
         [Required]
         public int ChatRoomId { get; set; }
+        public string SenderId { get; set; }
+        public string SenderName { get; set; }
+        public string SenderRole { get; set; } = "admin";
     }
 }

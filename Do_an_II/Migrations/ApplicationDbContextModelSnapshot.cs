@@ -288,6 +288,13 @@ namespace Do_an_II.Migrations
                     b.Property<int>("Count")
                         .HasColumnType("int");
 
+                    b.Property<string>("FlashSaleId")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<bool>("IsFlashSale")
+                        .HasColumnType("bit");
+
                     b.Property<int>("OrderId")
                         .HasColumnType("int");
 
@@ -361,28 +368,28 @@ namespace Do_an_II.Migrations
                             Id = 1,
                             CategoryId = 7,
                             Color = "Đen",
-                            CreatedAt = new DateTime(2025, 7, 27, 18, 54, 39, 611, DateTimeKind.Local).AddTicks(5367),
+                            CreatedAt = new DateTime(2026, 1, 4, 12, 43, 51, 235, DateTimeKind.Local).AddTicks(7065),
                             Description = "Áo thun nam",
                             Material = "Cotton",
                             Name = "Áo thun",
                             Price = 100m,
                             Quantity = 10,
                             Size = "M",
-                            UpdatedAt = new DateTime(2025, 7, 27, 18, 54, 39, 611, DateTimeKind.Local).AddTicks(5385)
+                            UpdatedAt = new DateTime(2026, 1, 4, 12, 43, 51, 235, DateTimeKind.Local).AddTicks(7079)
                         },
                         new
                         {
                             Id = 2,
                             CategoryId = 9,
                             Color = "Trắng",
-                            CreatedAt = new DateTime(2025, 7, 27, 18, 54, 39, 611, DateTimeKind.Local).AddTicks(5392),
+                            CreatedAt = new DateTime(2026, 1, 4, 12, 43, 51, 235, DateTimeKind.Local).AddTicks(7086),
                             Description = "Áo sơ mi nam",
                             Material = "Vải",
                             Name = "Áo sơ mi",
                             Price = 200m,
                             Quantity = 20,
                             Size = "L",
-                            UpdatedAt = new DateTime(2025, 7, 27, 18, 54, 39, 611, DateTimeKind.Local).AddTicks(5392)
+                            UpdatedAt = new DateTime(2026, 1, 4, 12, 43, 51, 235, DateTimeKind.Local).AddTicks(7086)
                         });
                 });
 
@@ -440,6 +447,97 @@ namespace Do_an_II.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("Reviews");
+                });
+
+            modelBuilder.Entity("Do_an_II.Models.Voucher", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("DiscountType")
+                        .HasColumnType("int");
+
+                    b.Property<double>("DiscountValue")
+                        .HasColumnType("float");
+
+                    b.Property<DateTime>("EndDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<double?>("MaxDiscountAmount")
+                        .HasColumnType("float");
+
+                    b.Property<int>("MaxUsagePerUser")
+                        .HasColumnType("int");
+
+                    b.Property<double?>("MinOrderAmount")
+                        .HasColumnType("float");
+
+                    b.Property<int>("MinimumTier")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("Quantity")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("StartDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("UsedQuantity")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Vouchers");
+                });
+
+            modelBuilder.Entity("Do_an_II.Models.VoucherUsage", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<double>("DiscountAmount")
+                        .HasColumnType("float");
+
+                    b.Property<int>("OrderId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("UsedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<int>("VoucherId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OrderId");
+
+                    b.HasIndex("UserId");
+
+                    b.HasIndex("VoucherId");
+
+                    b.ToTable("VoucherUsages");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
@@ -669,6 +767,12 @@ namespace Do_an_II.Migrations
                     b.Property<string>("State")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int>("TotalOrders")
+                        .HasColumnType("int");
+
+                    b.Property<double>("TotalSpent")
+                        .HasColumnType("float");
+
                     b.HasDiscriminator().HasValue("AppUser");
                 });
 
@@ -727,7 +831,7 @@ namespace Do_an_II.Migrations
             modelBuilder.Entity("Do_an_II.Models.OrderDetail", b =>
                 {
                     b.HasOne("Do_an_II.Models.Order", "Order")
-                        .WithMany()
+                        .WithMany("OrderDetails")
                         .HasForeignKey("OrderId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -768,7 +872,7 @@ namespace Do_an_II.Migrations
             modelBuilder.Entity("Do_an_II.Models.Review", b =>
                 {
                     b.HasOne("Do_an_II.Models.Product", "Product")
-                        .WithMany()
+                        .WithMany("Reviews")
                         .HasForeignKey("ProductId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -782,6 +886,33 @@ namespace Do_an_II.Migrations
                     b.Navigation("Product");
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Do_an_II.Models.VoucherUsage", b =>
+                {
+                    b.HasOne("Do_an_II.Models.Order", "Order")
+                        .WithMany("VoucherUsages")
+                        .HasForeignKey("OrderId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Do_an_II.Models.AppUser", "User")
+                        .WithMany("VoucherUsages")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Do_an_II.Models.Voucher", "Voucher")
+                        .WithMany("VoucherUsages")
+                        .HasForeignKey("VoucherId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Order");
+
+                    b.Navigation("User");
+
+                    b.Navigation("Voucher");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
@@ -840,9 +971,28 @@ namespace Do_an_II.Migrations
                     b.Navigation("Messages");
                 });
 
+            modelBuilder.Entity("Do_an_II.Models.Order", b =>
+                {
+                    b.Navigation("OrderDetails");
+
+                    b.Navigation("VoucherUsages");
+                });
+
             modelBuilder.Entity("Do_an_II.Models.Product", b =>
                 {
                     b.Navigation("ProductImages");
+
+                    b.Navigation("Reviews");
+                });
+
+            modelBuilder.Entity("Do_an_II.Models.Voucher", b =>
+                {
+                    b.Navigation("VoucherUsages");
+                });
+
+            modelBuilder.Entity("Do_an_II.Models.AppUser", b =>
+                {
+                    b.Navigation("VoucherUsages");
                 });
 #pragma warning restore 612, 618
         }

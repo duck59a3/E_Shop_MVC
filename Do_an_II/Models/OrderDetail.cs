@@ -19,5 +19,9 @@ namespace Do_an_II.Models
         public Product Product { get; set; }
         public int Count { get; set; }
         public double Price { get; set; }
+        public bool IsFlashSale { get; set; } = false;
+
+        [MaxLength(100)]
+        public string? FlashSaleId { get; set; }
     }
 }

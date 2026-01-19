@@ -1,0 +1,177 @@
+﻿@model RevenueVM
+@{
+    Layout = "~/Areas/Admin/Views/Shared/_LayoutAdmin.cshtml";
+}
+
+<div class="container dashboard-container">
+
+    <!-- Banner -->
+    <div class="dashboard-banner mb-4 text-center text-white d-flex align-items-center justify-content-center">
+        <h2 class="m-0">Báo cáo doanh thu</h2>
+    </div>
+
+    <!-- KPI Cards -->
+    <div class="row mb-4 text-center">
+        <div class="col-md-3">
+            <div class="card shadow-sm p-3 bg-success text-white">
+                <h5>Doanh thu hôm nay</h5>
+                <h3 id="revenueValueToday">@Model.TotalRevenueToday.ToString("N0")</h3>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card shadow-sm p-3 bg-success text-white">
+                <h5>Tổng doanh thu</h5>
+                <h3 id="revenueValueSum">@Model.TotalRevenue.ToString("N0")</h3>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card shadow-sm p-3 bg-info text-white">
+                <h5>Đơn hàng hôm nay</h5>
+                <h3 id="orderCountToday">@Model.TotalOrdersToday.ToString("N0")</h3>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card shadow-sm p-3 bg-success text-white">
+                <h5>Tổng đơn hàng</h5>
+                <h3 id="orderSum">@Model.TotalOrders.ToString("N0")</h3>
+            </div>
+        </div>
+    </div>
+
+    <!-- Biểu đồ -->
+    <div class="row mb-4">
+        <div class="col-md-6 mb-4">
+            <canvas id="revenueChart"></canvas>
+        </div>
+        <div class="col-md-6 mb-4">
+            <canvas id="categoryRevenueChart"></canvas>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-6 mb-4">
+            <canvas id="revenueChartbyAddress"></canvas>
+        </div>
+        <div class="col-md-6 mb-4">
+            <canvas id="categoryRevenueChart"></canvas>
+        </div>
+    </div>
+    <!-- Button xuất PDF -->
+    <div class="text-center mb-5">
+        <button id="exportFullPdfBtn" class="btn btn-success">Xuất PDF</button>
+    </div>
+
+</div>
+
+<!-- CSS -->
+<style>
+    .dashboard-banner {
+        width: 100%;
+        height: 120px;
+        background: linear-gradient(90deg, #4e73df, #1cc88a);
+        border-radius: 10px;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        font-size: 2rem;
+    }
+
+    .dashboard-container canvas {
+        background: #fff;
+        border-radius: 8px;
+        box-shadow: 0 3px 6px rgba(0,0,0,0.1);
+    }
+</style>
+
+<!-- Scripts -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.0/signalr.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+<script>
+    // Cập nhật realtime với SignalR
+    const connection = new signalR.HubConnectionBuilder()
+        .withUrl("/DashboardHub")
+        .build();
+
+    connection.start()
+        .then(() => console.log("Connected to DashboardHub"))
+        .catch(err => console.error(err));
+
+    connection.on("UpdateDashboard", data => {
+        document.querySelector("#revenueValueToday").innerText = `${data.revenue}₫`;
+        document.querySelector("#revenueValueSum").innerText = `${data.allrevenue}₫`;
+        document.querySelector("#orderCountToday").innerText = `${data.order}`;
+        document.querySelector("#orderSum").innerText = `${data.allorder}`;
+    });
+
+    // Chart: Doanh thu theo tháng
+    const revenueLabels = @Html.Raw(Json.Serialize(Model.RevenueByMonth.Select(r => r.Month)));
+    const revenueData = @Html.Raw(Json.Serialize(Model.RevenueByMonth.Select(r => r.Revenue)));
+    const revenueCtx = document.getElementById('revenueChart').getContext('2d');
+    new Chart(revenueCtx, {
+        type: 'line',
+        data: {
+            labels: revenueLabels,
+            datasets: [{
+                label: 'Doanh thu theo tháng',
+                data: revenueData,
+                fill: true,
+                borderColor: 'rgba(75, 192, 192, 1)',
+                backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                tension: 0.3
+            }]
+        },
+        options: { responsive: true, scales: { y: { beginAtZero: true } } }
+    });
+
+    // Chart: Doanh thu theo danh mục
+    const categoryLabels = @Html.Raw(Json.Serialize(Model.RevenueByCategory.Select(c => c.CategoryName)));
+    const categoryRevenueData = @Html.Raw(Json.Serialize(Model.RevenueByCategory.Select(c => c.Revenue)));
+    const categoryCtx = document.getElementById('categoryRevenueChart').getContext('2d');
+    new Chart(categoryCtx, {
+        type: 'bar',
+        data: {
+            labels: categoryLabels,
+            datasets: [{
+                label: 'Doanh thu theo danh mục',
+                data: categoryRevenueData,
+                backgroundColor: 'rgba(255, 159, 64, 0.7)',
+                borderColor: 'rgba(255, 159, 64, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: { responsive: true, scales: { y: { beginAtZero: true } } }
+    });
+
+
+
+    // Xuất toàn bộ dashboard ra PDF nhiều trang
+    document.getElementById("exportFullPdfBtn").addEventListener("click", async () => {
+        const dashboard = document.querySelector(".dashboard-container");
+
+        // Chụp toàn bộ dashboard
+        const canvas = await html2canvas(dashboard, { scale: 2, useCORS: true });
+        const imgData = canvas.toDataURL("image/png");
+
+        const { jsPDF } = window.jspdf;
+        const pdf = new jsPDF("p", "px", "a4");
+        const pdfWidth = pdf.internal.pageSize.getWidth();
+        const pdfHeight = pdf.internal.pageSize.getHeight();
+
+        const imgWidth = canvas.width;
+        const imgHeight = canvas.height;
+
+        let heightLeft = imgHeight;
+        let position = 0;
+
+        while (heightLeft > 0) {
+            const h = Math.min(heightLeft, pdfHeight * (imgWidth / pdfWidth));
+            pdf.addImage(imgData, "PNG", 0, position, pdfWidth, h);
+            heightLeft -= pdfHeight * (imgWidth / pdfWidth);
+            position = - (imgHeight - heightLeft);
+            if (heightLeft > 0) pdf.addPage();
+        }
+
+        pdf.save("BaoCaoDoanhThu.pdf");
+    });
+</script>

@@ -4,27 +4,12 @@
     Layout = "~/Areas/Admin/Views/Shared/_LayoutAdmin.cshtml";
 }
 
-<h2 class="mb-4">Báo cáo thống kê</h2>
+<div class="dashboard-banner mb-4 text-center text-white d-flex align-items-center justify-content-center">
+    <h2 class="m-0">Báo cáo tổng quan</h2>
+</div>
 <!-- KPI Cards -->
 <div class="row mb-4 text-center">
-    <div class="col-md-3">
-        <div class="card shadow-sm p-3 bg-success text-white">
-            <h5>Doanh thu hôm nay</h5>
-            <h3 id="revenueValueToday">@Model.TotalRevenueToday.ToString("N0")</h3>
-        </div>
-    </div>
-    <div class="col-md-3">
-    <div class="card shadow-sm p-3 bg-success text-white">
-        <h5>Tổng Doanh thu</h5>
-            <h3 id="revenueValue">@Model.TotalRevenue.ToString("N0") ₫</h3> 
-    </div>
-</div>
-    <div class="col-md-3">
-        <div class="card shadow-sm p-3 bg-info text-white">
-            <h5>Đơn hàng hôm nay</h5>
-            <h3 id="orderCountToday">@Model.TotalOrdersToday</h3>
-        </div>
-    </div>
+    
     <div class="col-md-3">
         <div class="card shadow-sm p-3 bg-info text-white">
             <h5>Tổng số đơn hàng</h5>
@@ -46,21 +31,19 @@
 </div>
 
 <!-- Biểu đồ -->
-<div class="row">
-    <div class="col-md-6">
+<div class="row mb-4 text-center">
+    <div class="col-md-6 mb-4">
         <canvas id="productChart"></canvas>
     </div>
-    <div class="col-md-6">
-        <canvas id="revenueChart"></canvas>
-    </div>
+    <div class="col-md-6 mb-4 ">
+    <canvas id="topProductChart"></canvas>
+</div>
 </div>
 
-<div class="row">
-    <div class="col-md-6 offset-md-3">
-        <canvas id="topProductChart"></canvas>
-    </div>
+<div class="row b-4 text-center">
+   
 
-    <div class="col-md-6 ">
+    <div class="col-md-6 mb-4">
         <canvas id="topRegion"></canvas>
     </div>
 </div>
@@ -77,9 +60,6 @@
 
         connection.on("UpdateDashboard", data => {
         console.log("Received data:", data);
-        document.querySelector("#revenueValueToday").innerText = `${data.revenue}₫`;
-        document.querySelector("#orderCountToday").innerText = `${data.order}`;
-        document.querySelector("#revenueValue").innerText = `${data.allrevenue}₫`;
         document.querySelector("#orderCount").innerText = `${data.allorder}`;
         
         
@@ -94,26 +74,6 @@
                 label: 'Thống kê sản phẩm',
                 data: [@Model.TotalProducts, @Model.TotalSoldProducts],
                 backgroundColor: ['rgba(54, 162, 235, 0.6)', 'rgba(255, 99, 132, 0.6)']
-            }]
-        },
-        options: { responsive: true, scales: { y: { beginAtZero: true } } }
-    });
-
-    // Line Chart - Doanh thu theo tháng
-    const revenueLabels = @Html.Raw(Json.Serialize(Model.RevenueByMonth.Select(r => r.Month)));
-    const revenueData = @Html.Raw(Json.Serialize(Model.RevenueByMonth.Select(r => r.Revenue)));
-    const revenueCtx = document.getElementById('revenueChart').getContext('2d');
-    new Chart(revenueCtx, {
-        type: 'line',
-        data: {
-            labels: revenueLabels,
-            datasets: [{
-                label: 'Doanh thu theo tháng',
-                data: revenueData,
-                fill: true,
-                borderColor: 'rgba(75, 192, 192, 1)',
-                backgroundColor: 'rgba(75, 192, 192, 0.2)',
-                tension: 0.3
             }]
         },
         options: { responsive: true, scales: { y: { beginAtZero: true } } }
@@ -158,3 +118,13 @@
         options: { responsive: true, scales: { y: { beginAtZero: true } } }
     });
 </script>
+<style>
+    .dashboard-banner {
+        width: 100%;
+        height: 120px; /* độ cao banner */
+        background: linear-gradient(90deg, #4e73df, #1cc88a); /* gradient đẹp */
+        border-radius: 10px;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        font-size: 2rem;
+    }
+</style>

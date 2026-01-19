@@ -12,42 +12,56 @@
             <div class="row g-4">
                 <!-- Cột ảnh -->
                 <div class="col-lg-6 d-flex justify-content-center">
-                    @if (Model.Product.ProductImages != null && Model.Product.ProductImages.Count() > 0)
+                    @if (Model.Product.ProductImages != null && Model.Product.ProductImages.Any())
                     {
                         <div id="carouselExampleIndicators" class="carousel slide" data-bs-ride="carousel">
                             <div class="carousel-indicators">
                                 @foreach (var itemIndex in Model.Product.ProductImages
-                                .Select((img, i) => new { ProductImage = img, Index = i }))
+                                                            .Select((img, i) => new { ProductImage = img, Index = i }))
                                 {
-                                    <button type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide-to="@itemIndex.Index" class="@(itemIndex.Index == 0 ? "active" : "")" aria-current="true" aria-label="Slide @itemIndex.Index"></button>
-                                })
-                                
-                            </div>
-                            <div class="carousel-inner">
-                                @foreach (var itemIndex in Model.Product.ProductImages
-                               .Select((img, i) => new { Image = img, Index = i })) {
-                                <div class="@(itemIndex.Index == 0 ?"carousel-item active":"carousel-item")">
-                                    <img src="@itemIndex.Image.ImageUrl" class="d-block w-100" alt="...">
-                                </div>
+                                    <button type="button"
+                                            data-bs-target="#carouselExampleIndicators"
+                                            data-bs-slide-to="@itemIndex.Index"
+                                            class="@(itemIndex.Index == 0 ? "active" : "")"
+                                            aria-current="@(itemIndex.Index == 0 ? "true" : "false")"
+                                            aria-label="Slide @(itemIndex.Index + 1)">
+                                    </button>
                                 }
                             </div>
+
+                            <div class="carousel-inner">
+                                @foreach (var itemIndex in Model.Product.ProductImages
+                                                            .Select((img, i) => new { Image = img, Index = i }))
+                                {
+                                    <div class="@(itemIndex.Index == 0 ? "carousel-item active" : "carousel-item")">
+                                        <div class="carousel-item @(itemIndex.Index == 0 ? "active" : "") d-flex justify-content-center align-items-center" style="height:500px; background:#f8f9fa;">
+                                            <img src="@itemIndex.Image.ImageUrl"
+                                                 class="rounded shadow-sm"
+                                                 alt="@Model.Product.Name"
+                                                 style="max-height: 100%; max-width: 100%; object-fit: contain;" />
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+
                             <button class="carousel-control-prev" type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide="prev">
                                 <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-                                <span class="visually-hidden">Previous</span>
+                                <span class="visually-hidden"></span>
                             </button>
                             <button class="carousel-control-next" type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide="next">
                                 <span class="carousel-control-next-icon" aria-hidden="true"></span>
-                                <span class="visually-hidden">Next</span>
+                                <span class="visually-hidden"></span>
                             </button>
                         </div>
                     }
                     else
                     {
                         <img src="~/img/logo.png" alt="@Model.Product.Name"
-                             class="img-fluid rounded shadow-sm border border-2" style="max-height: 500px;" />
-                    })
-                    
+                             class="img-fluid rounded shadow-sm border border-2"
+                             style="max-height: 500px;" />
+                    }
                 </div>
+
 
                 <!-- Cột thông tin -->
                 <div class="col-lg-6">
@@ -97,18 +111,76 @@
                 </div>
             </div>
         </div>
-        <div class="row product-detail-bottom">
-            <div class="col-lg-12">
-                <ul class="nav nav-pills nav-justified">
-                    <li class="nav-item">
-                        <a class="nav-link" data-toggle="pill" href="#reviews">Bình luận sản phẩm </a>
-                    </li>
-                </ul>
-                
+        
+    </div>
+</form>
+<div class="row product-detail-bottom mt-5">
+    <div class="col-lg-12">
+        <ul class="nav nav-pills nav-justified">
+            <li class="nav-item">
+                <a class="nav-link active" data-bs-toggle="pill" href="#reviews">Bình luận sản phẩm</a>
+            </li>
+        </ul>
+        <div class="tab-content pt-3">
+            <div id="reviews" class="tab-pane fade show active">
+                <h4 class="mb-4">Đánh giá & Bình luận</h4>
 
-                
-              
+                @if (User.Identity.IsAuthenticated)
+                {
+                    <form asp-controller="Review" asp-action="PostReview" method="post">
+                        <input type="hidden" name="productId" value="@Model.Product.Id" />
+
+                        <div class="mb-2">
+                            <label for="rating" class="form-label fw-bold">Đánh giá:</label>
+                            <select name="rating" class="form-select w-auto">
+                                @for (int i = 1; i <= 5; i++)
+                                {
+                                    <option value="@i">@i ⭐</option>
+                                }
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <textarea name="comment" class="form-control" placeholder="Nhập bình luận..." rows="3"></textarea>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary">Gửi đánh giá</button>
+                    </form>
+                }
+                else
+                {
+                    <p><a asp-area="Identity" asp-controller="Account" asp-action="Login">Đăng nhập</a> để bình luận.</p>
+                }
+
+                <!-- Danh sách bình luận -->
+                <div class="reviews-list mt-4">
+                    @if (Model.Product.Reviews != null && Model.Product.Reviews.Any())
+                    {
+                        @foreach (var review in Model.Product.Reviews.OrderByDescending(r => r.CreatedAt))
+                        {
+                            <div class="border rounded p-3 mb-3 bg-light">
+                                <strong>@review.User?.UserName</strong>
+                                <span class="text-warning">@string.Concat(Enumerable.Repeat("★", review.Rating))</span>
+                                <p class="mb-1">@review.Comment</p>
+                                <small class="text-muted">@review.CreatedAt.ToString("dd/MM/yyyy HH:mm")</small>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <p class="text-muted fst-italic">Chưa có đánh giá nào cho sản phẩm này.</p>
+                    }
+                </div>
             </div>
         </div>
     </div>
-</form>
+</div>
+<style>
+    .carousel-item img {
+        transition: transform 0.6s ease, opacity 0.6s ease;
+    }
+
+    .carousel-item.active img {
+        transform: scale(1.02);
+    }
+</style>

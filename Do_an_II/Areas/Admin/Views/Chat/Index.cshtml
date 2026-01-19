@@ -279,6 +279,8 @@
                 selectedRoomId = roomId;
                 $("#selectedChatRoomId").val(roomId);
 
+        // Clear tin nhắn cũ
+                $("#chatMessages").empty();
                 // Cập nhật giao diện
                 $("#customerName").text(customerName);
                 $("#noChatSelected").addClass("d-none");
@@ -291,10 +293,11 @@
             });
 
             // 5. Gửi tin nhắn
-            $("#sendButton").click(function () {
+            $("#sendButton").click(function (e) {
+                e.preventDefault();
                 let message = $("#messageInput").val().trim();
                 if (message && selectedRoomId) {
-                    connection.invoke("SendMessage", {
+                    connection.invoke("SendAdminMessage", {
                         chatRoomId: selectedRoomId,
                         senderId: adminId,
                         senderName: adminName,
@@ -315,7 +318,7 @@
                 const chatBox = $("#chatMessages");
                 if (chatBox.length === 0) return;
 
-                const mine = msg.senderRole === "admin";
+                const mine = msg.senderRole?.toLowerCase() === "admin";
                 const msgHtml = `
                     <div class="message ${mine ? "text-end" : "text-start"} mb-2">
                         <div class="p-2 rounded ${mine ? "bg-primary text-white" : "bg-light"} d-inline-block">
@@ -330,7 +333,7 @@
 
             // 7. Tải lịch sử tin nhắn từ API
             function loadMessages(roomId) {
-                $.get(`/Admin/Chat/GetMessages?roomId=${roomId}`, function (messages) {
+                $.get(`/Admin/Chat/GetMessages?chatRoomId=${roomId}`, function (messages) {
                     console.log("Kết quả GetMessages:", messages);
                     messages.forEach(msg => appendMessage(msg));
                 });

@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using Do_an_II.Utilities;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -15,5 +17,12 @@ namespace Do_an_II.Models
         public string? PostalCode { get; set; }
         [NotMapped]
         public string Role { get; set; }
+        public int TotalOrders { get; set; }
+        public double TotalSpent { get; set; }
+        [NotMapped]
+        public MemberLevel MemberLevel { get; set; } = MemberLevel.Bronze;
+        [ValidateNever]
+        public ICollection<VoucherUsage> VoucherUsages { get; set; }
+
     }
 }

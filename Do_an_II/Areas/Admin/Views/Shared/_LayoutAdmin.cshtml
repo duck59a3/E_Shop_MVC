@@ -204,15 +204,35 @@
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" asp-area="Admin" asp-controller="Dashboard" asp-action="Index">
-                            <span class="menu-title">Biểu đồ</span>
+                        <a class="nav-link" data-bs-toggle="collapse" href="#ui-basic" aria-expanded="false" aria-controls="ui-basic">
+                            <span class="menu-title">Báo cáo thống kê</span>
+                            <i class="menu-arrow"></i>
                             <i class="mdi mdi-chart-bar menu-icon"></i>
                         </a>
+                        <div class="collapse" id="ui-basic">
+                            <ul class="nav flex-column sub-menu">
+                                <li class="nav-item">
+                                    <a asp-area="Admin" asp-controller="Dashboard" asp-action="Index" class="nav-link">Báo cáo tổng quan</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" asp-area="Admin" asp-controller="Dashboard" asp-action="DoanhThu">Thống kê doanh thu</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" asp-area="Admin" asp-controller="Dashboard" asp-action="KhachHang">Thống kê khách hàng</a>
+                                </li>
+                            </ul>
+                        </div>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" asp-area="Admin" asp-controller="Order" asp-action="Index" >
                             <span class="menu-title">Quản lý đơn hàng</span>
                             <i class="mdi mdi-receipt menu-icon"></i>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" asp-area="Admin" asp-controller="Voucher" asp-action="Index">
+                            <span class="menu-title">Quản lý khuyến mãi</span>
+                            <i class="mdi mdi-ticket-percent menu-icon"></i>
                         </a>
                     </li>
                     <li class="nav-item">

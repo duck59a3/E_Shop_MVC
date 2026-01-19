@@ -11,6 +11,13 @@ namespace Do_an_II.Repository
         {
             _db = db;
         }
+
+        public IEnumerable<Review> GetReviewsByProductId(int productId)
+        {
+            var reviews = _db.Reviews.Where(r => r.ProductId == productId).OrderByDescending(r => r.CreatedAt).ToList();
+            return reviews;
+        }
+
         public void Update(Review review)
         {
             _db.Reviews.Update(review);

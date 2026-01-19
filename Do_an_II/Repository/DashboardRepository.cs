@@ -37,5 +37,6 @@ namespace Do_an_II.Repository
                 .Where(o => o.OrderDate.Date == DateTime.Today)
                 .Sum(o => o.OrderTotal);
         }
+        
     }
 }

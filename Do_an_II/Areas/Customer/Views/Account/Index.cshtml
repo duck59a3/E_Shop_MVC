@@ -1,4 +1,5 @@
-﻿@model AppUser
+﻿@using static Do_an_II.Utilities.EnumExtensions;
+@model AccountVM
 
 @{
     Layout = "~/Views/Shared/_Layout.cshtml";
@@ -21,11 +22,10 @@
         <div class="row">
             <div class="col-md-3">
                 <div class="nav flex-column nav-pills" role="tablist" aria-orientation="vertical">
-                    <a class="nav-link" id="orders-nav" data-toggle="pill" href="#orders-tab" role="tab"><i class="fa fa-shopping-bag"></i>Orders</a>
-                    <a class="nav-link" id="payment-nav" data-toggle="pill" href="#payment-tab" role="tab"><i class="fa fa-credit-card"></i>Payment Method</a>
-                    <a class="nav-link" id="address-nav" data-toggle="pill" href="#address-tab" role="tab"><i class="fa fa-map-marker-alt"></i>address</a>
-                    <a class="nav-link" id="account-nav" data-toggle="pill" href="#account-tab" role="tab"><i class="fa fa-user"></i>Account Details</a>
-                    <a class="nav-link" href="index.html"><i class="fa fa-sign-out-alt"></i>Logout</a>
+                    <a class="nav-link" id="orders-nav" data-toggle="pill" href="#orders-tab" role="tab"><i class="fa fa-shopping-bag"></i>Đơn hàng</a>
+                    <a class="nav-link" id="address-nav" data-toggle="pill" href="#address-tab" role="tab"><i class="fa fa-map-marker-alt"></i>Địa chỉ giao hàng</a>
+                    <a class="nav-link" id="account-nav" data-toggle="pill" href="#account-tab" role="tab"><i class="fa fa-user"></i>Thông tin chi tiết</a>
+                    <a class="nav-link" id="voucher-nav" data-toggle="pill" href="#voucher-tab" role="tab"><i class="fa fa-ticket-alt"></i>Khuyến mãi của bạn</a>
                 </div>
             </div>
             <div class="col-md-9">
@@ -50,73 +50,76 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <tr>
-                                        <td>1</td>
-                                        <td>Product Name</td>
-                                        <td>01 Jan 2020</td>
-                                        <td>$99</td>
-                                        <td>Approved</td>
-                                        <td><button class="btn">View</button></td>
-                                    </tr>
-                                    <tr>
-                                        <td>2</td>
-                                        <td>Product Name</td>
-                                        <td>01 Jan 2020</td>
-                                        <td>$99</td>
-                                        <td>Approved</td>
-                                        <td><button class="btn">View</button></td>
-                                    </tr>
-                                    <tr>
-                                        <td>3</td>
-                                        <td>Product Name</td>
-                                        <td>01 Jan 2020</td>
-                                        <td>$99</td>
-                                        <td>Approved</td>
-                                        <td><button class="btn">View</button></td>
-                                    </tr>
+                                    
+                                    @foreach(var item in Model.Orders) {
+                                        @foreach (var dt in item.OrderDetails)
+                                    {
+                                        <tr>
+                                            <td>@item.Order.Id</td>
+                                            <td>@dt.Product.Name</td>
+                                            <td>@item.Order.OrderDate.ToString("dd MMM yyyy")</td>
+                                            <td>$@dt.Product.Price</td>
+                                            <td id="order-status-@item.Order.Id">@item.Order.OrderStatus</td>
+                                            <td><button class="btn">View</button></td>
+                                        </tr>
+                                    }
+                                    }
+                                    
+
+  
+                                    
                                 </tbody>
                             </table>
                         </div>
                     </div>
-                    <div class="tab-pane fade" id="payment-tab" role="tabpanel" aria-labelledby="payment-nav">
-                        <h4>Payment Method</h4>
-                        <p>
-                            Lorem ipsum dolor sit amet, consectetur adipiscing elit. In condimentum quam ac mi viverra dictum. In efficitur ipsum diam, at dignissim lorem tempor in. Vivamus tempor hendrerit finibus. Nulla tristique viverra nisl, sit amet bibendum ante suscipit non. Praesent in faucibus tellus, sed gravida lacus. Vivamus eu diam eros. Aliquam et sapien eget arcu rhoncus scelerisque.
-                        </p>
-                    </div>
+                 
                     <div class="tab-pane fade" id="address-tab" role="tabpanel" aria-labelledby="address-nav">
-                        <h4>Địa chỉ</h4>
+                        <h4>Thông tin giao hàng</h4>
                         <div class="row">
                             <div class="col-md-6">
-                                <h5>Địa chỉ hiện tại</h5>
-                                <p>@Model.Address</p>
-                                <p>Mobile: @Model.PhoneNumber</p>
-                                <button class="btn">Edit Address</button>
+                                <form asp-area="Customer" asp-controller="Account" asp-action="UpdateShippingAddress" method="post">
+                                    @Html.AntiForgeryToken()
+                                    <div class="form-group">
+                                        <label>Địa chỉ giao hàng</label>
+                                        <input type="text" name="address" class="form-control" value="@Model.AppUser.Address" required />
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label>Số điện thoại</label>
+                                        <input type="text" name="phone" class="form-control" value="@Model.AppUser.PhoneNumber" required />
+                                    </div>
+
+                                    <button type="submit" class="btn btn-primary mt-2">Cập nhật</button>
+                                </form>
                             </div>
                         </div>
                     </div>
                     <div class="tab-pane fade" id="account-tab" role="tabpanel" aria-labelledby="account-nav">
-                        <h4>Account Details</h4>
+                        <h4>Thông tin chi tiết -  @Model.AppUser.MemberLevel.ToStyledBadge()</h4>
+                        
+                        <form asp-area="Customer" asp-controller="Account" asp-action="UpdateProfile" method="post">
+                            @Html.AntiForgeryToken()
                         <div class="row">
                             <div class="col-md-6">
-                                <input class="form-control" type="text" placeholder="Name">
+                                <input name="name" class="form-control" type="text" placeholder="Name" required value="@Model.AppUser.Name">
                             </div>
 
                             <div class="col-md-6">
-                                <input class="form-control" type="text" placeholder="Mobile Phone">
+                                    <input class="form-control" type="text" placeholder="Mobile Phone" required value="@Model.AppUser.PhoneNumber">
                             </div>
                             <div class="col-md-6">
-                                <input class="form-control" type="text" placeholder="Email">
+                                    <input class="form-control" type="text" placeholder="Email" disabled value="@Model.AppUser.Email">
                             </div>
                             <div class="col-md-12">
-                                <input class="form-control" type="text" placeholder="Address">
+                                    <input class="form-control" type="text" placeholder="Address" required value="@Model.AppUser.Address">
                             </div>
                             <div class="col-md-12">
-                                <button class="btn">Update Account</button>
+                                <button type="submit" class="btn">Update Account</button>
                                 <br><br>
                             </div>
                         </div>
-                        <h4>Password change</h4>
+                        </form>
+                        <h4>Đổi mật khẩu</h4>
                         <div class="row">
                             <div class="col-md-12">
                                 <input class="form-control" type="password" placeholder="Current Password">
@@ -128,8 +131,70 @@
                                 <input class="form-control" type="text" placeholder="Confirm Password">
                             </div>
                             <div class="col-md-12">
-                                <button class="btn">Save Changes</button>
+                                <button class="btn">Lưu thay đổi</button>
                             </div>
+                        </div>
+                    </div>
+                    <div class="tab-pane fade" id="voucher-tab" role="tabpanel" aria-labelledby="voucher-nav">
+                        <div class="table-responsive">
+                            <table class="table table-bordered">
+                                <thead class="thead-dark">
+                                    <tr>
+                                        <th>No</th>
+                                        <th>Mã khuyến mãi</th>
+                                        <th>Loại khuyến mãi</th>
+                                        <th>Giảm giá</th>
+                                        <th>Hạn</th>
+                                        <th>Status</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @if (Model.Vouchers != null && Model.Vouchers.Any())
+                                    {
+                                        
+                                    
+                                    foreach (var item in Model.Vouchers)
+                                    {
+                                        
+                                            <tr>
+                                                <td>@item.Id</td>
+                                                <td>@item.Code</td>
+                                                <td>@item.DiscountType</td>
+                                                <td>@item.DiscountValue</td>
+                                                <td>@item.ExpiryDate.ToString("dd MMM yyyy")</td>
+                                            <td>@if (item.IsUsed)
+                                                {
+                                                    <span class="text-danger">Đã sử dụng</span>
+                                                }
+                                                else if (item.ExpiryDate < DateTime.Now)
+                                                {
+                                                    <span class="text-warning">Hết hạn</span>
+                                                }
+    
+                                                else
+                                                {
+                                                    <span class="text-success">Chưa sử dụng</span>
+                                                }
+                                            </td>
+                                            
+                                            <td><button class="btn">View</button></td>
+                                            </tr>
+                                        
+                                    }
+                                    }
+                                    else 
+                                    {
+                                        <tr>
+                                            <td colspan="7" class="text-center">Bạn không có mã khuyến mãi nào.</td>
+                                        </tr>
+                                    }
+
+
+
+
+                                </tbody>
+                            </table>
                         </div>
                     </div>
                 </div>
@@ -209,3 +274,17 @@
         </div>
     </div>
 </div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.0/signalr.min.js"></script>
+<script>
+        const connection = new signalR.HubConnectionBuilder()
+        .withUrl("/orderTrackingHub")
+        .build();
+
+    connection.on("ReceiveOrderUpdate", (orderId, status) => {
+        alert(`Đơn hàng #${orderId} đã được cập nhật: ${status}`);
+        document.getElementById(`order-status-${orderId}`).innerText = status;
+    });
+
+    connection.start();
+
+</script>

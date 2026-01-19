@@ -16,6 +16,8 @@ namespace Do_an_II.Repository
         public IReviewRepository Review { get; private set; }
         public INotificationRepository Notification { get; private set; }
         public IDashboardRepository Dashboard { get; private set; }
+        public IVoucherRepository Voucher { get; private set; }
+        public IVoucherUsageRepository VoucherUsage { get; private set; }
 
         public UnitOfWork(ApplicationDbContext db) 
         {
@@ -30,6 +32,8 @@ namespace Do_an_II.Repository
             Review = new ReviewRepository(_db);
             Dashboard = new DashboardRepository(_db);
             Notification = new NotificationRepository(_db);
+            Voucher = new VoucherRepository(_db);
+            VoucherUsage = new VoucherUsageRepository(_db);
         }
 
 

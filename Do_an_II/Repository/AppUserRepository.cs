@@ -11,7 +11,10 @@ namespace Do_an_II.Repository
         {
             _db = db;
         }
-        
-       
+
+        public void Update(AppUser user)
+        {
+            _db.AppUsers.Update(user);
+        }
     }
 }

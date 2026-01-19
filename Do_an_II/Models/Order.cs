@@ -35,6 +35,9 @@ namespace Do_an_II.Models
         public string State { get; set; }
         [Required]
         public string PostalCode { get; set; }
+        [ValidateNever]
+        public ICollection<OrderDetail> OrderDetails { get; set; }
+        public ICollection<VoucherUsage> VoucherUsages { get; set; }
 
 
     }

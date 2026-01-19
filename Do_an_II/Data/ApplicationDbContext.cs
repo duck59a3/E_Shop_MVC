@@ -22,9 +22,29 @@ namespace Do_an_II.Data
         public DbSet<Notification> Notifications { get; set; }
         public DbSet<ChatMessage> ChatMessages { get; set; }
         public DbSet<ChatRoom> ChatRooms { get; set; }
+        public DbSet<Voucher> Vouchers { get; set; }
+        public DbSet<VoucherUsage> VoucherUsages { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
+            modelBuilder.Entity<VoucherUsage>()
+               .HasOne(v => v.Order)
+             .WithMany(o => o.VoucherUsages)
+    .HasForeignKey(v => v.OrderId)
+    .OnDelete(DeleteBehavior.Restrict);   // hoặc .OnDelete(DeleteBehavior.NoAction)
+
+            modelBuilder.Entity<VoucherUsage>()
+                .HasOne(v => v.User)
+                .WithMany(u => u.VoucherUsages)
+                .HasForeignKey(v => v.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<VoucherUsage>()
+                .HasOne(v => v.Voucher)
+                .WithMany(v => v.VoucherUsages)
+                .HasForeignKey(v => v.VoucherId)
+                .OnDelete(DeleteBehavior.Restrict);
+
             modelBuilder.Entity<Category>().HasData(
                 new Category
                 {

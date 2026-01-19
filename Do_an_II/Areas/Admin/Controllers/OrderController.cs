@@ -1,9 +1,11 @@
-﻿using Do_an_II.Models;
+﻿using Do_an_II.Hubs;
+using Do_an_II.Models;
 using Do_an_II.Models.ViewModels;
 using Do_an_II.Repository.IRepository;
 using Do_an_II.Utilities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 using Stripe;
 using Stripe.Climate;
 using System.Net.WebSockets;
@@ -16,11 +18,14 @@ namespace Do_an_II.Areas.Admin.Controllers
     public class OrderController : Controller
     {
         private readonly IUnitOfWork _unitOfWork;
+        private readonly IHubContext<OrderTrackingHub> _orderHub;
         [BindProperty]
         public OrderVM OrderVM { get; set; }
-        public OrderController(IUnitOfWork unitOfWork)
+        public OrderController(IUnitOfWork unitOfWork, IHubContext<OrderTrackingHub> orđerHub)
         {
             _unitOfWork = unitOfWork;
+            _orderHub = orđerHub;
+
         }
         public IActionResult Index()
         {
@@ -64,8 +69,11 @@ namespace Do_an_II.Areas.Admin.Controllers
         [HttpPost]
         public IActionResult StartProcessing()
         {
+            var order = _unitOfWork.Order.Get(u => u.Id == OrderVM.Order.Id);
             _unitOfWork.Order.UpdateStatus(OrderVM.Order.Id, Status.StatusInProcess);
             _unitOfWork.Save();
+            _orderHub.Clients.User(order.AppUserId)
+            .SendAsync("ReceiveOrderUpdate", order.Id, order.OrderStatus);
             TempData["success"] = "Đơn hàng đang được xử lý";
             return RedirectToAction(nameof(Details), new { orderId = OrderVM.Order.Id });
         }
@@ -83,6 +91,8 @@ namespace Do_an_II.Areas.Admin.Controllers
             }
             _unitOfWork.Order.Update(order);
             _unitOfWork.Save();
+            _orderHub.Clients.User(order.AppUserId)
+            .SendAsync("ReceiveOrderUpdate", order.Id, order.OrderStatus);
             TempData["success"] = "Đơn hàng đã được giao";
             return RedirectToAction(nameof(Details), new { orderId = OrderVM.Order.Id });
         }
@@ -106,6 +116,8 @@ namespace Do_an_II.Areas.Admin.Controllers
                 _unitOfWork.Order.UpdateStatus(order.Id, Status.StatusCancelled, Status.StatusCancelled);
             }
             _unitOfWork.Save();
+            _orderHub.Clients.User(order.AppUserId)
+            .SendAsync("ReceiveOrderUpdate", order.Id, order.OrderStatus);
             TempData["success"] = "Đơn hàng đã bị hủy";
 
 
